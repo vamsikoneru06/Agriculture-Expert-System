@@ -2,6 +2,7 @@
 MongoDB connection manager.
 Uses a single MongoClient instance (connection pooling is handled internally).
 """
+import certifi
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from config.settings import AppConfig
@@ -21,8 +22,7 @@ def init_db(app):
         _client = MongoClient(
             AppConfig.MONGO_URI,
             serverSelectionTimeoutMS=10000,
-            tls=True,
-            tlsAllowInvalidCertificates=True,
+            tlsCAFile=certifi.where(),
         )
         # Verify connection
         _client.admin.command("ping")
