@@ -18,7 +18,12 @@ def init_db(app):
     global _client, _db
 
     try:
-        _client = MongoClient(AppConfig.MONGO_URI, serverSelectionTimeoutMS=5000)
+        _client = MongoClient(
+            AppConfig.MONGO_URI,
+            serverSelectionTimeoutMS=10000,
+            tls=True,
+            tlsAllowInvalidCertificates=True,
+        )
         # Verify connection
         _client.admin.command("ping")
         _db = _client[AppConfig.DB_NAME]
