@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MdSend, MdChat, MdRefresh } from 'react-icons/md';
+import { MdSend, MdRefresh } from 'react-icons/md';
 
 /* ── FAQ Knowledge Base ── */
 const FAQ = [

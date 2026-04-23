@@ -3,10 +3,9 @@ import {
   matchRules, soilOptions, weatherOptions, seasonOptions, expertRules,
 } from '../data/expertRules';
 import {
-  MdEco, MdWaterDrop, MdBugReport, MdLightbulb,
+  MdBugReport, MdLightbulb,
   MdCheckCircle, MdSearch, MdTune, MdGrain,
 } from 'react-icons/md';
-import { WiThermometer } from 'react-icons/wi';
 
 /* Confidence badge */
 function ConfidenceBadge({ value }) {

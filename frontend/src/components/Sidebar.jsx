@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  MdDashboard, MdEco, MdBarChart, MdPsychology,
+  MdDashboard, MdEco, MdPsychology,
   MdHistory, MdAdminPanelSettings, MdChat,
   MdLogout, MdMenu, MdClose, MdGrain,
 } from 'react-icons/md';

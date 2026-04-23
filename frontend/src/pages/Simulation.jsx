@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  LineChart, Line, AreaChart, Area, XAxis, YAxis,
+  LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { MdPlayArrow, MdStop, MdRefresh, MdThermostat, MdCloud, MdWaterDrop, MdEco } from 'react-icons/md';
