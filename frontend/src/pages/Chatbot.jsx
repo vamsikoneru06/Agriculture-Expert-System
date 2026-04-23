@@ -82,9 +82,10 @@ export default function Chatbot() {
 
       setTyping(false);
       setMessages(m => [...m, { role: 'bot', text: reply, time }]);
-    } catch (_) {
+    } catch (err) {
       setTyping(false);
-      const fallback = "I'm currently offline. Please check your connection or try again shortly.";
+      const detail = err?.response?.data?.message || err?.message || 'unknown error';
+      const fallback = `Unable to reach AgriBot (${detail}). Check that the backend is running and REACT_APP_API_URL is set correctly.`;
       setMessages(m => [...m, { role: 'bot', text: fallback, time }]);
     }
   };
