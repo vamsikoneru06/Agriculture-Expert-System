@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mongod --version)",
+      "Bash(pip --version)",
+      "Bash(npm --version)",
+      "Bash(pip install *)",
+      "Bash(python ml_model/train_model.py)",
+      "Bash(python -c \"import sys; sys.stdout.reconfigure\\(encoding='utf-8'\\); exec\\(open\\('ml_model/train_model.py'\\).read\\(\\)\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(npm install *)",
+      "Bash(gh auth *)",
+      "Bash(git --version)",
+      "Bash(curl --version)"
+    ]
+  }
+}
