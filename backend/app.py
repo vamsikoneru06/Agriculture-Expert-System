@@ -75,7 +75,11 @@ def create_app() -> Flask:
     app.config["DEBUG"]                    = AppConfig.DEBUG
 
     # ── CORS — allow React frontend ───────────────────────────────────────────
-    CORS(app, resources={r"/api/*": {"origins": AppConfig.CORS_ORIGINS}})
+    CORS(app,
+         resources={r"/api/*": {"origins": AppConfig.CORS_ORIGINS}},
+         supports_credentials=True,
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
     # ── JWT ───────────────────────────────────────────────────────────────────
     JWTManager(app)
