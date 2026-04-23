@@ -1,5 +1,5 @@
 """
-Chat Controller — LLM-powered agricultural assistant using Claude.
+Chat Controller — LLM-powered agricultural assistant using Google Gemini.
 Falls back to a simple keyword response when the API key is not configured.
 """
 import os
@@ -32,7 +32,7 @@ If asked something outside agriculture or this system, politely redirect to agri
 
 
 def _fallback_response(message: str) -> str:
-    """Simple keyword fallback when Anthropic API key is not configured."""
+    """Simple keyword fallback when Gemini API key is not configured."""
     msg = message.lower()
     if any(k in msg for k in ["hello", "hi", "hey"]):
         return "Hello! I'm AgriBot. Ask me about crops, soil, fertilizers, or how to use this system."
@@ -62,33 +62,35 @@ def chat():
     if not message:
         return error_response("Message is required", 400)
 
-    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    api_key = os.getenv("GEMINI_API_KEY", "")
 
     if not api_key:
         return success_response(data={"reply": _fallback_response(message), "source": "fallback"})
 
     try:
-        import anthropic
+        import google.generativeai as genai
 
-        # Build conversation history (last 10 turns for context)
-        messages = []
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash",
+            system_instruction=SYSTEM_PROMPT,
+        )
+
+        # Convert history to Gemini format (role must be "user" or "model")
+        gemini_history = []
         for msg in history[-10:]:
             role = msg.get("role")
             content = msg.get("content", "")
-            if role in ("user", "assistant") and content:
-                messages.append({"role": role, "content": content})
-        messages.append({"role": "user", "content": message})
+            if role == "user" and content:
+                gemini_history.append({"role": "user",  "parts": [content]})
+            elif role == "assistant" and content:
+                gemini_history.append({"role": "model", "parts": [content]})
 
-        client = anthropic.Anthropic(api_key=api_key)
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=600,
-            system=SYSTEM_PROMPT,
-            messages=messages,
-        )
-        reply = response.content[0].text
+        chat_session = model.start_chat(history=gemini_history)
+        response = chat_session.send_message(message)
+        reply = response.text
         return success_response(data={"reply": reply, "source": "llm"})
 
-    except Exception as e:
+    except Exception:
         # Degrade gracefully — never crash the app over a chat failure
         return success_response(data={"reply": _fallback_response(message), "source": "fallback"})
