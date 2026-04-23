@@ -124,12 +124,18 @@ def predict_yield(crop_type: str, soil_ph: float, nitrogen: float,
 def _estimate_confidence(yield_val: float, crop: str) -> int:
     """Return a confidence percentage (heuristic based on yield range)."""
     typical_ranges = {
-        "wheat":   (3.0, 5.5),
-        "rice":    (4.0, 7.0),
-        "maize":   (5.0, 8.0),
-        "cotton":  (2.0, 3.5),
-        "soybean": (1.5, 3.0),
-        "potato":  (20.0, 30.0),
+        "wheat":     (3.0, 5.5),
+        "rice":      (4.0, 7.0),
+        "maize":     (5.0, 8.0),
+        "cotton":    (2.0, 3.5),
+        "soybean":   (1.5, 3.0),
+        "potato":    (20.0, 30.0),
+        "sugarcane": (65.0, 90.0),
+        "tomato":    (25.0, 45.0),
+        "onion":     (15.0, 25.0),
+        "banana":    (30.0, 50.0),
+        "groundnut": (1.5, 2.8),
+        "sunflower": (1.5, 2.5),
     }
     lo, hi = typical_ranges.get(crop, (1.0, 10.0))
     if lo <= yield_val <= hi:
@@ -147,6 +153,8 @@ def _grade_yield(yield_val: float, crop: str) -> tuple[str, str]:
     typical_hi = {
         "wheat": 5.0, "rice": 6.5, "maize": 7.5,
         "cotton": 3.2, "soybean": 2.5, "potato": 28.0,
+        "sugarcane": 90.0, "tomato": 45.0, "onion": 25.0,
+        "banana": 50.0, "groundnut": 2.8, "sunflower": 2.5,
     }
     hi = typical_hi.get(crop, 5.0)
     ratio = yield_val / hi

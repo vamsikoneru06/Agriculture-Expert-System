@@ -13,6 +13,7 @@ from utils.validators import validate_registration, validate_login
 from utils.response_helper import (
     success_response, error_response, created_response
 )
+from config.settings import AppConfig
 
 
 def register():
@@ -26,6 +27,12 @@ def register():
     errors = validate_registration(data)
     if errors:
         return error_response("Validation failed", 422, errors)
+
+    # ── Admin secret key check ────────────────────────────────────────────────
+    if data.get("role") == "admin":
+        provided_key = data.get("admin_secret_key", "").strip()
+        if provided_key != AppConfig.ADMIN_SECRET_KEY:
+            return error_response("Invalid admin secret code. Contact your organisation administrator.", 403)
 
     try:
         # ── Create user (password is hashed inside user_model) ───────────────

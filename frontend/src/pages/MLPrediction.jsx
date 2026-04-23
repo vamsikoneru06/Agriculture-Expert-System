@@ -14,11 +14,18 @@ function predictYield(inputs) {
 
   // Simplified decision-tree logic
   let base = 3.0;
-  if (cropType === 'wheat')   base = 4.2;
-  if (cropType === 'rice')    base = 5.5;
-  if (cropType === 'maize')   base = 6.1;
-  if (cropType === 'cotton')  base = 2.8;
-  if (cropType === 'soybean') base = 2.5;
+  if (cropType === 'wheat')     base = 4.2;
+  if (cropType === 'rice')      base = 5.5;
+  if (cropType === 'maize')     base = 6.1;
+  if (cropType === 'cotton')    base = 2.8;
+  if (cropType === 'soybean')   base = 2.5;
+  if (cropType === 'potato')    base = 25.0;
+  if (cropType === 'sugarcane') base = 78.0;
+  if (cropType === 'tomato')    base = 32.0;
+  if (cropType === 'onion')     base = 20.0;
+  if (cropType === 'banana')    base = 42.0;
+  if (cropType === 'groundnut') base = 2.1;
+  if (cropType === 'sunflower') base = 2.0;
 
   // Soil pH factor (optimal 6-7)
   const phFactor = 1 - Math.abs(soilPH - 6.5) * 0.1;
@@ -51,11 +58,18 @@ function predictYield(inputs) {
 }
 
 const CROP_OPTIONS = [
-  { value: 'wheat',   label: 'Wheat 🌿',        optYield: '3-5 t/ha'  },
-  { value: 'rice',    label: 'Rice 🍚',          optYield: '4-6 t/ha'  },
-  { value: 'maize',   label: 'Maize 🌽',         optYield: '5-8 t/ha'  },
-  { value: 'cotton',  label: 'Cotton 🌸',        optYield: '2-3 t/ha'  },
-  { value: 'soybean', label: 'Soybean 🫘',       optYield: '1.5-2.5 t/ha' },
+  { value: 'wheat',     label: 'Wheat 🌿',      optYield: '3–5 t/ha'    },
+  { value: 'rice',      label: 'Rice 🍚',        optYield: '4–6 t/ha'    },
+  { value: 'maize',     label: 'Maize 🌽',       optYield: '5–8 t/ha'    },
+  { value: 'cotton',    label: 'Cotton 🌸',      optYield: '2–3 t/ha'    },
+  { value: 'soybean',   label: 'Soybean 🫘',     optYield: '1.5–2.5 t/ha'},
+  { value: 'potato',    label: 'Potato 🥔',      optYield: '20–30 t/ha'  },
+  { value: 'sugarcane', label: 'Sugarcane 🎋',   optYield: '65–90 t/ha'  },
+  { value: 'tomato',    label: 'Tomato 🍅',      optYield: '25–45 t/ha'  },
+  { value: 'onion',     label: 'Onion 🧅',       optYield: '15–25 t/ha'  },
+  { value: 'banana',    label: 'Banana 🍌',      optYield: '30–50 t/ha'  },
+  { value: 'groundnut', label: 'Groundnut 🥜',   optYield: '1.5–2.8 t/ha'},
+  { value: 'sunflower', label: 'Sunflower 🌻',   optYield: '1.5–2.5 t/ha'},
 ];
 
 const defaultInputs = {

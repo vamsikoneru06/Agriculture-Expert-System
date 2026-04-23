@@ -28,6 +28,9 @@ class Config:
         hours=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES_HOURS", 24))
     )
 
+    # Admin registration secret key
+    ADMIN_SECRET_KEY = os.getenv("ADMIN_SECRET_KEY", "AGRI-ADMIN-2025")
+
     # CORS — supports comma-separated list for multiple origins
     _cors_raw = os.getenv("CORS_ORIGINS", "http://localhost:3000")
     CORS_ORIGINS = [o.strip() for o in _cors_raw.split(",")] if "," in _cors_raw else _cors_raw

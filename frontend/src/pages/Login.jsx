@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff, MdGrain } from 'react-icons/md';
 
 const DEMO_CREDENTIALS = [
-  { role: 'Admin',   email: 'admin@agri.com',   password: 'admin123',   color: 'bg-red-100 text-red-700 border-red-200' },
   { role: 'Farmer',  email: 'farmer@agri.com',  password: 'farmer123',  color: 'bg-green-100 text-green-700 border-green-200' },
   { role: 'Student', email: 'student@agri.com', password: 'student123', color: 'bg-blue-100 text-blue-700 border-blue-200' },
 ];

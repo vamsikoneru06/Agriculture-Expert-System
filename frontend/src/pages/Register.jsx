@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { MdPerson, MdEmail, MdLock, MdVisibility, MdVisibilityOff, MdGrain } from 'react-icons/md';
+import { MdPerson, MdEmail, MdLock, MdVisibility, MdVisibilityOff, MdGrain, MdVpnKey } from 'react-icons/md';
 
 const ROLES = [
-  { value: 'farmer',  label: 'Farmer',  desc: 'Get crop & soil recommendations',    emoji: '👨‍🌾' },
-  { value: 'student', label: 'Student', desc: 'Learn and explore expert system',     emoji: '🎓' },
-  { value: 'admin',   label: 'Admin',   desc: 'Manage rules, users & analytics',     emoji: '⚙️'  },
+  { value: 'farmer',  label: 'Farmer',  desc: 'Get crop & soil recommendations', emoji: '👨‍🌾' },
+  { value: 'student', label: 'Student', desc: 'Learn and explore expert system',  emoji: '🎓'  },
+  { value: 'admin',   label: 'Admin',   desc: 'Requires organisation secret code', emoji: '⚙️' },
 ];
 
 export default function Register() {
   const { register } = useAuth();
   const navigate     = useNavigate();
 
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'farmer' });
-  const [showPwd, setShowPwd] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState('');
+  const [form,       setForm]      = useState({ name: '', email: '', password: '', role: 'farmer' });
+  const [adminCode,  setAdminCode] = useState('');
+  const [showPwd,    setShowPwd]   = useState(false);
+  const [loading,    setLoading]   = useState(false);
+  const [error,      setError]     = useState('');
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
@@ -24,8 +25,12 @@ export default function Register() {
     e.preventDefault();
     setError('');
     if (form.password.length < 6) { setError('Password must be at least 6 characters'); return; }
+    if (form.role === 'admin' && !adminCode.trim()) {
+      setError('Admin secret code is required to register as Admin');
+      return;
+    }
     setLoading(true);
-    const result = await register(form.name, form.email, form.password, form.role);
+    const result = await register(form.name, form.email, form.password, form.role, adminCode);
     setLoading(false);
     if (result.success) navigate('/dashboard');
     else setError(result.message || 'Registration failed');
@@ -116,6 +121,27 @@ export default function Register() {
                 ))}
               </div>
             </div>
+
+            {/* Admin secret code — only shown when Admin role is selected */}
+            {form.role === 'admin' && (
+              <div className="animate-fadeIn">
+                <label className="form-label">Admin Secret Code</label>
+                <div className="relative">
+                  <MdVpnKey className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <input
+                    type="password"
+                    value={adminCode}
+                    onChange={e => setAdminCode(e.target.value)}
+                    placeholder="Enter organisation admin code"
+                    className="form-input pl-10"
+                    required
+                  />
+                </div>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                  Contact your organisation administrator for the secret code.
+                </p>
+              </div>
+            )}
 
             <button type="submit" disabled={loading}
               className="btn-primary w-full flex items-center justify-center gap-2 py-3">

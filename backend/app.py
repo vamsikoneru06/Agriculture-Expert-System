@@ -20,6 +20,7 @@ from routes.expert_routes import expert_bp
 from routes.simulation_routes import simulation_bp
 from routes.ml_routes import ml_bp
 from routes.admin_routes import admin_bp
+from routes.chat_routes import chat_bp
 
 
 # ── Swagger / OpenAPI config ──────────────────────────────────────────────────
@@ -91,6 +92,7 @@ def create_app() -> Flask:
     app.register_blueprint(simulation_bp)
     app.register_blueprint(ml_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(chat_bp)
 
     # ── Health check endpoint ─────────────────────────────────────────────────
     @app.route("/", methods=["GET"])

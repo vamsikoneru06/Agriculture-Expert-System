@@ -2,11 +2,10 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 
 const AuthContext = createContext(null);
 
-/* ── Demo users (used when backend is offline) ── */
+/* ── Demo users (offline fallback — admin intentionally excluded) ── */
 const DEMO_USERS = [
-  { id: 1, name: 'Admin User',   email: 'admin@agri.com',   password: 'admin123',   role: 'admin'   },
-  { id: 2, name: 'Farmer Ravi',  email: 'farmer@agri.com',  password: 'farmer123',  role: 'farmer'  },
-  { id: 3, name: 'Student Priya',email: 'student@agri.com', password: 'student123', role: 'student' },
+  { id: 2, name: 'Farmer Ravi',   email: 'farmer@agri.com',  password: 'farmer123',  role: 'farmer'  },
+  { id: 3, name: 'Student Priya', email: 'student@agri.com', password: 'student123', role: 'student' },
 ];
 
 export function AuthProvider({ children }) {
@@ -55,12 +54,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   /* Register – tries real API, falls back to demo registration */
-  const register = useCallback(async (name, email, password, role) => {
+  const register = useCallback(async (name, email, password, role, adminCode = '') => {
     try {
       const res = await fetch('http://localhost:5000/api/auth/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ name, email, password, role }),
+        body:    JSON.stringify({ name, email, password, role, admin_secret_key: adminCode }),
         signal:  AbortSignal.timeout(3000),
       });
       if (res.ok) {
