@@ -7,8 +7,9 @@ const API_BASE = (process.env.REACT_APP_API_URL || 'http://localhost:5000/api')
 
 /* ── Demo users (offline fallback — admin intentionally excluded) ── */
 const DEMO_USERS = [
-  { id: 2, name: 'Farmer Ravi',   email: 'farmer@agri.com',  password: 'farmer123',  role: 'farmer'  },
-  { id: 3, name: 'Student Priya', email: 'student@agri.com', password: 'student123', role: 'student' },
+  { id: 1, name: 'Admin',        email: 'admin@agri.com',   password: 'admin123',   role: 'admin'   },
+  { id: 2, name: 'Farmer Teja',  email: 'farmer@agri.com',  password: 'farmer123',  role: 'farmer'  },
+  { id: 3, name: 'Student Sai',  email: 'student@agri.com', password: 'student123', role: 'student' },
 ];
 
 export function AuthProvider({ children }) {

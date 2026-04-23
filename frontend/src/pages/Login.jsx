@@ -69,7 +69,7 @@ export default function Login() {
           </div>
         </div>
 
-        <p className="text-primary-300 text-sm">© 2025 Agriculture Expert System — Final Year Project</p>
+        <p className="text-primary-300 text-sm">© 2025 Agriculture Expert System</p>
       </div>
 
       {/* ── Right panel (form) ── */}

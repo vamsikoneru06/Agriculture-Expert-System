@@ -39,8 +39,8 @@ def seed_all():
     print("\n[1/4] Seeding users ...")
     demo_users = [
         {"name": "Admin User",    "email": "admin@agri.com",   "password": "admin123",   "role": "admin"},
-        {"name": "Farmer Ravi",   "email": "farmer@agri.com",  "password": "farmer123",  "role": "farmer"},
-        {"name": "Student Priya", "email": "student@agri.com", "password": "student123", "role": "student"},
+        {"name": "Farmer Teja",  "email": "farmer@agri.com",  "password": "farmer123",  "role": "farmer"},
+        {"name": "Student Sai",  "email": "student@agri.com", "password": "student123", "role": "student"},
     ]
     created_users = 0
     for u in demo_users:
