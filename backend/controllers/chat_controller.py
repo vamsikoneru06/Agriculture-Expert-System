@@ -72,7 +72,7 @@ def chat():
 
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
+            model_name="gemini-1.5-flash-latest",
             system_instruction=SYSTEM_PROMPT,
         )
 
@@ -91,6 +91,6 @@ def chat():
         reply = response.text
         return success_response(data={"reply": reply, "source": "llm"})
 
-    except Exception as e:
-        # Return the actual error so it can be debugged
-        return success_response(data={"reply": f"[Gemini error] {str(e)}", "source": "error"})
+    except Exception:
+        # Gemini unavailable — use keyword fallback silently
+        return success_response(data={"reply": _fallback_response(message), "source": "fallback"})

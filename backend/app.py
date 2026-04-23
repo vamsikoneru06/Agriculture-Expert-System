@@ -74,11 +74,8 @@ def create_app() -> Flask:
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = AppConfig.JWT_ACCESS_TOKEN_EXPIRES
     app.config["DEBUG"]                    = AppConfig.DEBUG
 
-    # ── CORS — allow React frontend ───────────────────────────────────────────
-    CORS(app,
-         resources={r"/api/*": {"origins": AppConfig.CORS_ORIGINS}},
-         supports_credentials=True,
-         allow_headers=["Content-Type", "Authorization"],
+    # ── CORS — open to all origins (agriculture education app) ───────────────
+    CORS(app, origins="*", allow_headers=["Content-Type", "Authorization"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
     # ── JWT ───────────────────────────────────────────────────────────────────
