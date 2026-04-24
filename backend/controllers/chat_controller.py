@@ -71,10 +71,20 @@ def chat():
         import google.generativeai as genai
 
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash-latest",
-            system_instruction=SYSTEM_PROMPT,
+        # Auto-discover the first available generateContent model
+        available = [
+            m.name for m in genai.list_models()
+            if "generateContent" in m.supported_generation_methods
+        ]
+        if not available:
+            raise Exception("No Gemini models available for this API key")
+        # Prefer flash/pro models; strip "models/" prefix if present
+        preferred = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro"]
+        model_name = next(
+            (p for p in preferred if any(p in a for a in available)),
+            available[0].replace("models/", "")
         )
+        model = genai.GenerativeModel(model_name=model_name, system_instruction=SYSTEM_PROMPT)
 
         # Convert history to Gemini format (role must be "user" or "model")
         gemini_history = []
