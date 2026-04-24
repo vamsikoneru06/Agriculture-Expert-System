@@ -91,6 +91,6 @@ def chat():
         reply = response.text
         return success_response(data={"reply": reply, "source": "llm"})
 
-    except Exception:
-        # Gemini unavailable — use keyword fallback silently
-        return success_response(data={"reply": _fallback_response(message), "source": "fallback"})
+    except Exception as e:
+        # Temporarily expose error for debugging
+        return success_response(data={"reply": f"[DEBUG] {str(e)}", "source": "error"})
