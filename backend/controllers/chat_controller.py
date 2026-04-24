@@ -1,8 +1,9 @@
 """
-Chat Controller — LLM-powered agricultural assistant using Google Gemini.
-Falls back to a simple keyword response when the API key is not configured.
+Chat Controller — LLM-powered agricultural assistant using Google Gemini REST API.
+Falls back to a simple keyword response when the API key is not configured or quota exceeded.
 """
 import os
+import requests
 from flask import request
 from utils.response_helper import success_response, error_response
 
@@ -20,8 +21,8 @@ You can answer questions about:
 - Seasons: Kharif (Jun-Oct), Rabi (Nov-Mar), Zaid (Apr-Jun)
 - Organic farming, composting, biofertilizers
 - This system's features:
-    * Expert System: 25+ IF-THEN rules → crop + fertilizer + pest recommendation
-    * ML Prediction: Decision Tree Regressor (98.7% accuracy) → yield in tons/hectare
+    * Expert System: 25+ IF-THEN rules -> crop + fertilizer + pest recommendation
+    * ML Prediction: Decision Tree Regressor (98.7% accuracy) -> yield in tons/hectare
     * Simulation: Live environmental parameter generation (temperature, humidity, rainfall)
     * History: Prediction log with CSV export
     * Admin Panel: CRUD rules and users (admin role only)
@@ -46,11 +47,37 @@ def _fallback_response(message: str) -> str:
         return "Wheat: Rabi crop, best in loamy/sandy loam soil, needs 450-650mm water, 4-6 tons/ha yield. Apply DAP at sowing + Urea top-dress at tillering. Sow October-November."
     if any(k in msg for k in ["rice", "paddy"]):
         return "Rice: Kharif crop, clay soil, needs 1200-1500mm water, 4-6 tons/ha yield. Maintain 5cm standing water at tillering. Use N:120 P:60 K:60 kg/ha."
+    if any(k in msg for k in ["crop selection", "help", "crop"]):
+        return "For crop selection, tell me your: soil type (clay/loamy/sandy), season (Kharif/Rabi/Zaid), and water availability. I'll recommend the best crop for your conditions."
     if any(k in msg for k in ["expert system", "rules", "inference"]):
         return "The Expert System uses 25+ IF-THEN rules. Input your Soil Type + Weather + Season to get crop recommendation, fertilizer schedule, pest control advice, and yield expectation."
     if any(k in msg for k in ["ml", "machine learning", "prediction", "yield"]):
         return "The ML Prediction module uses a Decision Tree Regressor (98.7% test accuracy). Input soil pH, NPK values, temperature, and rainfall to predict crop yield in tons/hectare."
     return "I can help with crop selection, fertilizers, pest control, irrigation, and how to use this system. What would you like to know?"
+
+
+def _get_best_model(api_key: str) -> str:
+    """Discover available Gemini models via REST and return the best one."""
+    try:
+        r = requests.get(
+            "https://generativelanguage.googleapis.com/v1beta/models",
+            params={"key": api_key},
+            timeout=10
+        )
+        models = r.json().get("models", [])
+        # Filter to models that support generateContent
+        supported = [
+            m["name"] for m in models
+            if "generateContent" in m.get("supportedGenerationMethods", [])
+        ]
+        # Preference order
+        for pref in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash", "gemini-pro"]:
+            for name in supported:
+                if pref in name:
+                    return name  # returns full name like "models/gemini-1.5-flash-001"
+        return supported[0] if supported else None
+    except Exception:
+        return None
 
 
 def chat():
@@ -68,39 +95,37 @@ def chat():
         return success_response(data={"reply": _fallback_response(message), "source": "fallback"})
 
     try:
-        import google.generativeai as genai
+        # Discover available model
+        model_name = _get_best_model(api_key)
+        if not model_name:
+            raise Exception("No accessible Gemini model found")
 
-        genai.configure(api_key=api_key)
-        # Auto-discover the first available generateContent model
-        available = [
-            m.name for m in genai.list_models()
-            if "generateContent" in m.supported_generation_methods
-        ]
-        if not available:
-            raise Exception("No Gemini models available for this API key")
-        # Prefer flash/pro models; strip "models/" prefix if present
-        preferred = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro"]
-        model_name = next(
-            (p for p in preferred if any(p in a for a in available)),
-            available[0].replace("models/", "")
-        )
-        model = genai.GenerativeModel(model_name=model_name, system_instruction=SYSTEM_PROMPT)
-
-        # Convert history to Gemini format (role must be "user" or "model")
-        gemini_history = []
+        # Build contents array (history + current message)
+        contents = []
+        # Add system prompt as first user turn (REST API doesn't have system_instruction in all versions)
         for msg in history[-10:]:
             role = msg.get("role")
             content = msg.get("content", "")
             if role == "user" and content:
-                gemini_history.append({"role": "user",  "parts": [content]})
+                contents.append({"role": "user",  "parts": [{"text": content}]})
             elif role == "assistant" and content:
-                gemini_history.append({"role": "model", "parts": [content]})
+                contents.append({"role": "model", "parts": [{"text": content}]})
+        contents.append({"role": "user", "parts": [{"text": message}]})
 
-        chat_session = model.start_chat(history=gemini_history)
-        response = chat_session.send_message(message)
-        reply = response.text
+        # Call Gemini REST API directly
+        url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent"
+        payload = {
+            "system_instruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+            "contents": contents,
+            "generationConfig": {"maxOutputTokens": 1024, "temperature": 0.7}
+        }
+        resp = requests.post(url, params={"key": api_key}, json=payload, timeout=30)
+        resp.raise_for_status()
+
+        result = resp.json()
+        reply = result["candidates"][0]["content"]["parts"][0]["text"]
         return success_response(data={"reply": reply, "source": "llm"})
 
     except Exception as e:
-        # Temporarily expose error for debugging
-        return success_response(data={"reply": f"[DEBUG] {str(e)}", "source": "error"})
+        # Fall back to keyword responses silently
+        return success_response(data={"reply": _fallback_response(message), "source": "fallback"})
