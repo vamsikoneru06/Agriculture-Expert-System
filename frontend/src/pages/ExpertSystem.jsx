@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { matchRules, soilOptions, weatherOptions, seasonOptions, expertRules } from '../data/expertRules';
 import { MdBugReport, MdLightbulb, MdCheckCircle, MdSearch, MdTune, MdGrain } from 'react-icons/md';
 
-const tt = { backgroundColor: '#0d1117', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#e2e8f0' };
-
 function SelectField({ label, name, value, onChange, options, emoji }) {
   return (
     <div>

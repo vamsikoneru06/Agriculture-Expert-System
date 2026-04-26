@@ -6,8 +6,7 @@ import {
 } from 'recharts';
 import { useAuth } from '../context/AuthContext';
 import {
-  MdEco, MdPsychology, MdHistory, MdBarChart,
-  MdWaterDrop, MdThermostat, MdCloud, MdArrowForward,
+  MdEco, MdPsychology, MdHistory, MdBarChart, MdArrowForward,
 } from 'react-icons/md';
 
 const weeklyPredictions = [
