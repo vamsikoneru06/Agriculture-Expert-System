@@ -124,6 +124,15 @@ body {
   outline: none !important;
 }
 
+/* ── Spotlight animation ── */
+@keyframes spotlight {
+  0%   { opacity: 0; transform: translate(-72%, -62%) skewX(-17deg); }
+  100% { opacity: 1; transform: translate(-50%, -40%) skewX(-17deg); }
+}
+.animate-spotlight {
+  animation: spotlight 2s ease 0.75s forwards;
+}
+
 /* ── Chatbot bubble ── */
 .chat-bubble-user {
   @apply bg-primary-600 text-white rounded-2xl rounded-br-sm px-4 py-2.5 max-w-xs text-sm;
