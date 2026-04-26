@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { MdPsychology, MdCheckCircle } from 'react-icons/md';
-
-const tt = { backgroundColor: '#0d1117', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#e2e8f0' };
+import { useTheme } from '../context/ThemeContext';
+import { BrainCircuit, CheckCircle2, TrendingUp } from 'lucide-react';
 
 function predictYield(inputs) {
   const { cropType, soilPH, nitrogen, phosphorus, potassium, temperature, rainfall, farmArea } = inputs;
@@ -19,7 +18,7 @@ function predictYield(inputs) {
     totalYield:      (yield_ * farmArea).toFixed(2),
     confidence,
     grade:      yield_ > 5 ? 'Excellent' : yield_ > 3.5 ? 'Good' : yield_ > 2 ? 'Average' : 'Below Average',
-    gradeColor: yield_ > 5 ? 'text-green-400' : yield_ > 3.5 ? 'text-blue-400' : yield_ > 2 ? 'text-yellow-400' : 'text-red-400',
+    gradeColor: yield_ > 5 ? 'text-green-600 dark:text-green-400' : yield_ > 3.5 ? 'text-blue-600 dark:text-blue-400' : yield_ > 2 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400',
     featureImportance: [
       { feature: 'Soil pH',     importance: Math.round(phFactor * 30)      },
       { feature: 'Nitrogen',    importance: Math.round(nitrogen / 5)        },
@@ -53,14 +52,14 @@ function Slider({ label, name, value, min, max, step = 1, unit, onChange, color 
   const pct = ((value - min) / (max - min)) * 100;
   return (
     <div>
-      <div className="flex justify-between mb-1.5">
-        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</label>
-        <span className="text-sm font-bold text-white">{value}<span className="text-slate-500 text-xs ml-0.5">{unit}</span></span>
+      <div className="flex justify-between mb-2">
+        <label className="text-xs font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-wide">{label}</label>
+        <span className="text-sm font-bold text-slate-900 dark:text-white">{value}<span className="text-slate-400 dark:text-slate-500 text-xs ml-0.5 font-normal">{unit}</span></span>
       </div>
       <input type="range" name={name} min={min} max={max} step={step} value={value} onChange={onChange}
         className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-        style={{ background: `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`, accentColor: color }} />
-      <div className="flex justify-between text-xs text-slate-600 mt-0.5">
+        style={{ background: `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, rgba(148,163,184,0.2) ${pct}%, rgba(148,163,184,0.2) 100%)`, accentColor: color }} />
+      <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-600 mt-1 font-medium">
         <span>{min}{unit}</span><span>{max}{unit}</span>
       </div>
     </div>
@@ -68,6 +67,7 @@ function Slider({ label, name, value, min, max, step = 1, unit, onChange, color 
 }
 
 export default function MLPrediction() {
+  const { dark } = useTheme();
   const [inputs,  setInputs]  = useState(defaultInputs);
   const [result,  setResult]  = useState(null);
   const [loading, setLoading] = useState(false);
@@ -79,7 +79,7 @@ export default function MLPrediction() {
 
   const handlePredict = async () => {
     setLoading(true); setResult(null);
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 900));
     try {
       const res = await fetch('http://localhost:5000/api/ml/predict', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -93,45 +93,52 @@ export default function MLPrediction() {
 
   const imp = result?.featureImportance || [];
 
+  const tt = dark
+    ? { backgroundColor: '#0d1117', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#e2e8f0' }
+    : { backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', color: '#1e293b', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' };
+
   return (
-    <div className="space-y-6 fade-in">
+    <div className="space-y-5 fade-in">
       <div>
-        <h2 className="text-xl font-bold text-white">Machine Learning Prediction</h2>
-        <p className="text-slate-500 text-sm mt-0.5">Decision-Tree model predicts crop yield based on soil nutrients & climate inputs</p>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Machine Learning Prediction</h2>
+        <p className="text-slate-500 dark:text-slate-500 text-sm mt-0.5">Decision-Tree model predicts crop yield based on soil nutrients & climate inputs</p>
       </div>
 
-      {/* Model info */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl text-sm text-purple-300">
-        <span><span className="text-purple-400 font-semibold">Model:</span> Decision Tree Regressor</span>
-        <span className="text-purple-700">•</span>
-        <span><span className="text-purple-400 font-semibold">Dataset:</span> 2,200 samples</span>
-        <span className="text-purple-700">•</span>
-        <span><span className="text-purple-400 font-semibold">Train:</span> 91.2%</span>
-        <span className="text-purple-700">•</span>
-        <span><span className="text-purple-400 font-semibold">Test:</span> 88.7%</span>
+      {/* ── Model info ── */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 p-4 bg-violet-50 dark:bg-violet-500/5 border border-violet-200 dark:border-violet-500/20 rounded-xl text-sm">
+        <span className="text-violet-700 dark:text-violet-300"><span className="font-bold">Model:</span> Decision Tree Regressor</span>
+        <span className="text-violet-300 dark:text-violet-700">•</span>
+        <span className="text-violet-700 dark:text-violet-300"><span className="font-bold">Dataset:</span> 2,200 samples</span>
+        <span className="text-violet-300 dark:text-violet-700">•</span>
+        <span className="text-violet-700 dark:text-violet-300"><span className="font-bold">Train:</span> 91.2%</span>
+        <span className="text-violet-300 dark:text-violet-700">•</span>
+        <span className="text-violet-700 dark:text-violet-300"><span className="font-bold">Test:</span> 88.7%</span>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Input Panel */}
-        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6 space-y-5">
-          <div className="flex items-center gap-2">
-            <MdPsychology className="text-purple-400" size={20} />
-            <h3 className="font-semibold text-white">Model Input Features</h3>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        {/* ── Input Panel ── */}
+        <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-2xl p-6 space-y-5 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-violet-100 dark:bg-violet-500/15 rounded-xl flex items-center justify-center">
+              <BrainCircuit size={16} className="text-violet-600 dark:text-violet-400" />
+            </div>
+            <h3 className="font-bold text-slate-900 dark:text-white">Model Input Features</h3>
           </div>
 
           {/* Crop grid */}
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">Select Crop</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2.5">Select Crop</p>
             <div className="grid grid-cols-3 gap-2">
               {CROPS.map(c => (
                 <button key={c.value} onClick={() => setInputs(f => ({ ...f, cropType: c.value }))}
-                  className={`p-2.5 rounded-xl border-2 text-xs text-center transition-all
-                    ${inputs.cropType === c.value
-                      ? 'border-purple-500/60 bg-purple-500/10 text-purple-300'
-                      : 'border-white/[0.06] bg-white/[0.02] text-slate-400 hover:border-white/20 hover:text-slate-200'}`}>
+                  className={`p-2.5 rounded-xl border-2 text-xs text-center transition-all duration-150 ${
+                    inputs.cropType === c.value
+                      ? 'border-violet-400 dark:border-violet-500/60 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300'
+                      : 'border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-700 dark:hover:text-slate-200'
+                  }`}>
                   <div className="text-lg mb-0.5">{c.emoji}</div>
                   <div className="font-semibold">{c.label}</div>
-                  <div className="text-slate-600 text-[10px] mt-0.5">{c.optYield}</div>
+                  <div className="text-slate-400 dark:text-slate-600 text-[10px] mt-0.5">{c.optYield}</div>
                 </button>
               ))}
             </div>
@@ -146,56 +153,66 @@ export default function MLPrediction() {
           <Slider label="Farm Area"   name="farmArea"    value={inputs.farmArea}    min={0.5} max={20}   step={0.5} unit=" ha" onChange={handleChange} color="#eab308" />
 
           <button onClick={handlePredict} disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 disabled:opacity-40 transition-all shadow-lg shadow-purple-900/30">
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white text-sm bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-40 transition-all shadow-md shadow-violet-500/20">
             {loading
               ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Running ML Model…</>
-              : <><MdPsychology size={18} /> Predict Yield</>}
+              : <><BrainCircuit size={17} /> Predict Yield</>
+            }
           </button>
         </div>
 
-        {/* Result Panel */}
+        {/* ── Result Panel ── */}
         <div className="space-y-4">
           {!result ? (
-            <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl h-64 flex flex-col items-center justify-center text-center">
+            <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-2xl h-64 flex flex-col items-center justify-center text-center shadow-sm">
               <span className="text-5xl mb-3">🤖</span>
-              <p className="text-slate-500 text-sm">Adjust parameters and click<br /><span className="text-slate-300 font-medium">Predict Yield</span></p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm">Adjust parameters and click<br /><span className="text-slate-700 dark:text-slate-300 font-semibold">Predict Yield</span></p>
             </div>
           ) : (
             <>
               {/* Result card */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-purple-950/60 to-violet-950/40 border border-purple-500/25 rounded-2xl p-5">
+              <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 to-purple-700 dark:from-violet-950/60 dark:to-purple-950/40 dark:border dark:border-violet-500/25 rounded-2xl p-5 shadow-lg shadow-violet-500/20">
                 <div className="absolute top-0 right-0 text-7xl opacity-10 p-4 pointer-events-none select-none">📊</div>
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs text-purple-400/70 font-semibold uppercase tracking-widest">ML Prediction Result</p>
-                  <MdCheckCircle className="text-purple-400 text-2xl" />
+                  <p className="text-xs text-violet-200 dark:text-violet-400/70 font-bold uppercase tracking-widest">ML Prediction Result</p>
+                  <CheckCircle2 size={22} className="text-white/80 dark:text-violet-400" />
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-black/30 rounded-xl p-3">
-                    <p className="text-xs text-slate-500 mb-1">Yield / Hectare</p>
-                    <p className="text-3xl font-bold text-purple-300">{result.yieldPerHectare}<span className="text-base text-slate-500 ml-1">t/ha</span></p>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-white/15 dark:bg-black/30 backdrop-blur-sm rounded-xl p-3">
+                    <p className="text-xs text-white/70 dark:text-slate-500 mb-1">Yield / Hectare</p>
+                    <p className="text-3xl font-bold text-white dark:text-violet-200">{result.yieldPerHectare}<span className="text-sm text-white/60 dark:text-slate-500 ml-1">t/ha</span></p>
                   </div>
-                  <div className="bg-black/30 rounded-xl p-3">
-                    <p className="text-xs text-slate-500 mb-1">Total ({inputs.farmArea} ha)</p>
-                    <p className="text-3xl font-bold text-violet-300">{result.totalYield}<span className="text-base text-slate-500 ml-1">t</span></p>
+                  <div className="bg-white/15 dark:bg-black/30 backdrop-blur-sm rounded-xl p-3">
+                    <p className="text-xs text-white/70 dark:text-slate-500 mb-1">Total ({inputs.farmArea} ha)</p>
+                    <p className="text-3xl font-bold text-white dark:text-purple-200">{result.totalYield}<span className="text-sm text-white/60 dark:text-slate-500 ml-1">t</span></p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between mb-3">
-                  <div><p className="text-xs text-slate-500">Grade</p><p className={`text-lg font-bold ${result.gradeColor}`}>{result.grade}</p></div>
-                  <div className="text-right"><p className="text-xs text-slate-500">Confidence</p><p className="text-lg font-bold text-purple-400">{result.confidence}%</p></div>
+                  <div>
+                    <p className="text-xs text-white/60 dark:text-slate-500">Grade</p>
+                    <p className={`text-lg font-bold text-white dark:${result.gradeColor}`}>{result.grade}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-white/60 dark:text-slate-500">Confidence</p>
+                    <div className="flex items-center gap-1.5">
+                      <TrendingUp size={14} className="text-white/80" />
+                      <p className="text-lg font-bold text-white">{result.confidence}%</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-purple-500 to-violet-400 rounded-full transition-all duration-700" style={{ width: `${result.confidence}%` }} />
+                <div className="h-2 bg-white/20 dark:bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-white dark:bg-gradient-to-r dark:from-violet-400 dark:to-purple-300 rounded-full transition-all duration-700" style={{ width: `${result.confidence}%` }} />
                 </div>
               </div>
 
               {/* Feature importance */}
-              <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-5">
-                <h3 className="font-semibold text-white text-sm mb-3">Feature Importance</h3>
+              <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-2xl p-5 shadow-sm">
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-3">Feature Importance</h3>
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={imp} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                    <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                    <YAxis dataKey="feature" type="category" tick={{ fontSize: 11, fill: '#94a3b8' }} width={80} axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'} />
+                    <XAxis type="number" tick={{ fontSize: 10, fill: dark ? '#64748b' : '#94a3b8' }} axisLine={false} tickLine={false} />
+                    <YAxis dataKey="feature" type="category" tick={{ fontSize: 10, fill: dark ? '#94a3b8' : '#64748b' }} width={80} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={tt} />
                     <Bar dataKey="importance" radius={[0, 6, 6, 0]} name="Importance">
                       {imp.map((_, i) => <Cell key={i} fill={BAR_COLORS[i % 6]} />)}
@@ -205,8 +222,8 @@ export default function MLPrediction() {
               </div>
 
               {/* Radar */}
-              <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-5">
-                <h3 className="font-semibold text-white text-sm mb-3">Input Profile (Radar)</h3>
+              <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-2xl p-5 shadow-sm">
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-3">Input Profile (Radar)</h3>
                 <ResponsiveContainer width="100%" height={200}>
                   <RadarChart data={[
                     { subject: 'pH',   A: (inputs.soilPH / 9) * 100       },
@@ -216,8 +233,8 @@ export default function MLPrediction() {
                     { subject: 'Temp', A: (inputs.temperature / 45) * 100  },
                     { subject: 'Rain', A: (inputs.rainfall / 2000) * 100   },
                   ]}>
-                    <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: '#64748b' }} />
+                    <PolarGrid stroke={dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'} />
+                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: dark ? '#64748b' : '#94a3b8' }} />
                     <Radar name="Inputs" dataKey="A" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.2} />
                     <Tooltip contentStyle={tt} />
                   </RadarChart>
