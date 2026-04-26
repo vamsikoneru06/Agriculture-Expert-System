@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MdSend, MdRefresh } from 'react-icons/md';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { MdSend, MdRefresh, MdArrowBack } from 'react-icons/md';
 import api from '../services/api';
+import HeroWave from '../components/ui/HeroWave';
 
 const SUGGESTIONS = [
   'What crops grow in clay soil?',
@@ -45,18 +46,24 @@ function ChatMessage({ msg }) {
 }
 
 export default function Chatbot() {
-  const [messages, setMessages] = useState([WELCOME]);
-  const [input,    setInput]    = useState('');
-  const [typing,   setTyping]   = useState(false);
-  const bottomRef  = useRef(null);
-  const llmHistory = useRef([]);
+  const [messages,  setMessages]  = useState([WELCOME]);
+  const [input,     setInput]     = useState('');
+  const [typing,    setTyping]    = useState(false);
+  const [chatMode,  setChatMode]  = useState(false); // false = hero landing, true = chat view
+  const bottomRef   = useRef(null);
+  const inputRef    = useRef(null);
+  const llmHistory  = useRef([]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, typing]);
+  useEffect(() => {
+    if (chatMode) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, typing, chatMode]);
 
-  const sendMessage = async (text) => {
+  const sendMessage = useCallback(async (text) => {
     const userText = (text || input).trim();
     if (!userText) return;
     setInput('');
+    setChatMode(true);
+
     const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
     setMessages(m => [...m, { role: 'user', text: userText, time }]);
     setTyping(true);
@@ -73,20 +80,52 @@ export default function Chatbot() {
       const detail = err?.response?.data?.message || err?.message || 'unknown error';
       setMessages(m => [...m, { role: 'bot', text: `Unable to reach AgriBot (${detail}). Check that REACT_APP_API_URL is set correctly.`, time }]);
     }
-  };
+  }, [input]);
 
   const handleKeyDown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
-  const handleReset   = () => { setMessages([WELCOME]); setInput(''); llmHistory.current = []; };
 
+  const handleReset = () => {
+    setMessages([WELCOME]);
+    setInput('');
+    setChatMode(false);
+    llmHistory.current = [];
+  };
+
+  /* ── HERO LANDING VIEW ── */
+  if (!chatMode) {
+    return (
+      <div className="relative h-full w-full" style={{ minHeight: '600px' }}>
+        <HeroWave
+          title="AgriBot AI Assistant"
+          subtitle="Powered by Gemini AI — ask anything about crops, soil, fertilizers & more"
+          onPromptSubmit={sendMessage}
+        />
+      </div>
+    );
+  }
+
+  /* ── CHAT VIEW ── */
   return (
     <div className="space-y-4 fade-in h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between flex-shrink-0">
-        <div>
-          <h2 className="text-xl font-bold text-white">AI Agriculture Chatbot</h2>
-          <p className="text-slate-500 text-sm mt-0.5">Powered by Claude AI — ask anything about crops, soil, or this system</p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleReset}
+            className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all"
+            title="Back to home"
+          >
+            <MdArrowBack size={18} />
+          </button>
+          <div>
+            <h2 className="text-xl font-bold text-white">AI Agriculture Chatbot</h2>
+            <p className="text-slate-500 text-sm mt-0.5">Powered by Gemini AI — ask anything about crops, soil, or this system</p>
+          </div>
         </div>
-        <button onClick={handleReset} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all text-sm font-medium">
+        <button
+          onClick={handleReset}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all text-sm font-medium"
+        >
           <MdRefresh size={18} /> New Chat
         </button>
       </div>
@@ -112,14 +151,16 @@ export default function Chatbot() {
             <p className="font-semibold text-white text-sm">AgriBot</p>
             <div className="flex items-center gap-1.5 text-xs text-slate-400">
               <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-              Powered by Claude AI
+              Powered by Gemini AI
             </div>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-5"
-          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0)', backgroundSize: '32px 32px' }}>
+        <div
+          className="flex-1 overflow-y-auto p-5"
+          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0)', backgroundSize: '32px 32px' }}
+        >
           {messages.map((msg, i) => <ChatMessage key={i} msg={msg} />)}
           {typing && (
             <div className="flex gap-3 mb-4 fade-in">
@@ -138,6 +179,7 @@ export default function Chatbot() {
         <div className="px-4 py-3 border-t border-white/[0.06] bg-white/[0.02] flex-shrink-0">
           <div className="flex gap-2">
             <input
+              ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -147,7 +189,8 @@ export default function Chatbot() {
             <button
               onClick={() => sendMessage()}
               disabled={!input.trim() || typing}
-              className="px-4 rounded-xl text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex-shrink-0 shadow-lg shadow-green-900/30">
+              className="px-4 rounded-xl text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex-shrink-0 shadow-lg shadow-green-900/30"
+            >
               <MdSend size={20} />
             </button>
           </div>
