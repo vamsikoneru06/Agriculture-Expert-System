@@ -2,115 +2,108 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Bell, Search, Sun, Moon, ChevronDown } from 'lucide-react';
+import { Bell, Sun, Moon, ChevronDown, Slash } from 'lucide-react';
 
 const PAGE_META = {
-  '/dashboard':  { title: 'Dashboard',          subtitle: 'Overview & Analytics',          emoji: '🌾', color: 'text-green-600 dark:text-green-400'  },
-  '/expert':     { title: 'Expert System',      subtitle: 'IF-THEN Rule Inference',        emoji: '🧠', color: 'text-emerald-600 dark:text-emerald-400'},
-  '/simulation': { title: 'Simulation',         subtitle: 'Live Environmental Conditions', emoji: '🌦️', color: 'text-orange-600 dark:text-orange-400' },
-  '/ml':         { title: 'ML Prediction',      subtitle: 'Decision Tree Yield Forecast',  emoji: '🤖', color: 'text-violet-600 dark:text-violet-400' },
-  '/history':    { title: 'Prediction History', subtitle: 'Past Results & Exports',        emoji: '📋', color: 'text-blue-600 dark:text-blue-400'    },
-  '/admin':      { title: 'Admin Panel',        subtitle: 'System Management',             emoji: '⚙️', color: 'text-rose-600 dark:text-rose-400'    },
-  '/chatbot':    { title: 'AI Chatbot',         subtitle: 'Powered by Gemini AI',          emoji: '💬', color: 'text-cyan-600 dark:text-cyan-400'    },
+  '/dashboard':  { label: 'Dashboard',          emoji: '🌾' },
+  '/expert':     { label: 'Expert System',       emoji: '🧠' },
+  '/simulation': { label: 'Simulation',          emoji: '🌦️' },
+  '/ml':         { label: 'ML Prediction',       emoji: '🤖' },
+  '/history':    { label: 'History',             emoji: '📋' },
+  '/admin':      { label: 'Admin',               emoji: '⚙️' },
+  '/chatbot':    { label: 'AI Chatbot',          emoji: '💬' },
 };
 
-const NOTIFICATIONS = [
-  { text: 'New crop prediction saved',     time: '2 min ago',  dot: 'bg-green-500'  },
-  { text: 'Simulation cycle completed',    time: '1 hr ago',   dot: 'bg-blue-500'   },
-  { text: 'Admin added a knowledge rule',  time: '3 hr ago',   dot: 'bg-amber-500'  },
+const NOTES = [
+  { text: 'Crop prediction saved to history', time: '2m ago',  dot: 'bg-green-500'  },
+  { text: 'Simulation cycle completed',       time: '1h ago',  dot: 'bg-blue-500'   },
+  { text: 'New expert rule added',            time: '3h ago',  dot: 'bg-amber-500'  },
 ];
 
 export default function Navbar() {
   const { user }         = useAuth();
   const { dark, toggle } = useTheme();
   const location         = useLocation();
-  const [showNote, setShowNote] = useState(false);
-  const page = PAGE_META[location.pathname] || { title: 'AgriExpert', subtitle: '', emoji: '🌿', color: 'text-green-600' };
-  const today = new Date().toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' });
+  const [bell, setBell]  = useState(false);
+
+  const page = PAGE_META[location.pathname] || { label: 'AgriExpert', emoji: '🌿' };
 
   return (
     <header className="
-      h-16 flex-shrink-0 flex items-center justify-between px-6
-      bg-white/80 dark:bg-[#0b0f17]/80 backdrop-blur-xl
-      border-b border-slate-200/80 dark:border-white/[0.05]
-      transition-colors duration-300
+      relative h-14 flex-shrink-0 flex items-center justify-between px-5
+      bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl
+      border-b border-zinc-200/80 dark:border-zinc-800/80
+      z-20
     ">
-      {/* ── Left: page title ── */}
-      <div className="flex items-center gap-3 min-w-0">
-        <span className="text-xl flex-shrink-0">{page.emoji}</span>
-        <div className="min-w-0">
-          <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight truncate">{page.title}</h1>
-          <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{page.subtitle} · {today}</p>
+      {/* ── Breadcrumb ── */}
+      <div className="flex items-center gap-2 text-sm min-w-0">
+        <span className="text-zinc-400 dark:text-zinc-600 font-medium text-[13px] hidden sm:block">AgriExpert</span>
+        <Slash size={12} className="text-zinc-300 dark:text-zinc-700 hidden sm:block flex-shrink-0" />
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-base leading-none">{page.emoji}</span>
+          <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-[13px] truncate">{page.label}</span>
         </div>
       </div>
 
-      {/* ── Right: actions ── */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      {/* ── Right actions ── */}
+      <div className="flex items-center gap-1.5 flex-shrink-0">
 
-        {/* Search */}
-        <div className="hidden md:flex items-center gap-2 h-9 px-3 bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.06] rounded-xl group focus-within:border-green-400 dark:focus-within:border-green-500/40 transition-all">
-          <Search size={14} className="text-slate-400 dark:text-slate-600 flex-shrink-0" />
-          <input
-            placeholder="Search…"
-            className="bg-transparent text-sm text-slate-600 dark:text-slate-400 outline-none w-28 placeholder-slate-400 dark:placeholder-slate-600"
-            readOnly
-          />
-        </div>
-
-        {/* Theme toggle */}
+        {/* Theme */}
         <button
           onClick={toggle}
-          className="h-9 w-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/[0.08] transition-all"
+          className="h-8 w-8 flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-200 transition-all"
           title={dark ? 'Light mode' : 'Dark mode'}
         >
-          {dark ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} />}
+          {dark
+            ? <Sun size={15} className="text-amber-400" />
+            : <Moon size={15} />
+          }
         </button>
 
-        {/* Notifications */}
+        {/* Bell */}
         <div className="relative">
           <button
-            onClick={() => setShowNote(n => !n)}
-            className="h-9 w-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/[0.08] transition-all relative"
+            onClick={() => setBell(b => !b)}
+            className="h-8 w-8 flex items-center justify-center rounded-lg text-zinc-500 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-200 transition-all relative"
           >
             <Bell size={15} />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full ring-1 ring-white dark:ring-[#0b0f17]" />
+            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-green-500 rounded-full ring-1 ring-white dark:ring-zinc-950" />
           </button>
 
-          {showNote && (
-            <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/50 z-50 overflow-hidden">
-              <div className="px-4 py-3 border-b border-slate-100 dark:border-white/[0.06]">
-                <p className="text-sm font-semibold text-slate-800 dark:text-white">Notifications</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">3 recent updates</p>
+          {bell && (
+            <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl dark:shadow-2xl overflow-hidden scale-in z-50">
+              <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
+                <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">Notifications</p>
               </div>
-              <div className="py-1">
-                {NOTIFICATIONS.map((n, i) => (
-                  <div key={i} className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-colors cursor-default">
-                    <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${n.dot}`} />
-                    <div>
-                      <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">{n.text}</p>
-                      <p className="text-xs text-slate-400 dark:text-slate-600 mt-0.5">{n.time}</p>
-                    </div>
+              {NOTES.map((n, i) => (
+                <div key={i} className="flex items-start gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-default border-b border-zinc-100/50 dark:border-zinc-800/50 last:border-0">
+                  <span className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${n.dot}`} />
+                  <div className="min-w-0">
+                    <p className="text-[12px] text-zinc-700 dark:text-zinc-300 font-medium leading-snug">{n.text}</p>
+                    <p className="text-[11px] text-zinc-400 dark:text-zinc-600 mt-0.5">{n.time}</p>
                   </div>
-                ))}
-              </div>
-              <div className="px-4 py-2 border-t border-slate-100 dark:border-white/[0.06]">
-                <button className="text-xs text-green-600 dark:text-green-400 font-medium hover:underline">View all</button>
+                </div>
+              ))}
+              <div className="px-4 py-2.5">
+                <button className="text-[12px] text-green-600 dark:text-green-400 font-semibold hover:underline">Mark all as read</button>
               </div>
             </div>
           )}
         </div>
 
-        {/* User pill */}
-        <div className="flex items-center gap-2.5 pl-3 ml-1 border-l border-slate-200 dark:border-white/[0.06]">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-green-500/20 flex-shrink-0">
+        {/* Divider */}
+        <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-800 mx-1" />
+
+        {/* User */}
+        <button className="flex items-center gap-2 h-8 pl-1 pr-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 shadow-glow-sm">
             {user?.name?.charAt(0).toUpperCase() || 'U'}
           </div>
-          <div className="hidden md:block min-w-0">
-            <p className="text-sm font-semibold text-slate-900 dark:text-white leading-tight truncate max-w-[100px]">{user?.name}</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 capitalize">{user?.role}</p>
+          <div className="hidden sm:block text-left min-w-0">
+            <p className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100 leading-tight truncate max-w-[80px]">{user?.name}</p>
           </div>
-          <ChevronDown size={13} className="hidden md:block text-slate-400 dark:text-slate-600 flex-shrink-0" />
-        </div>
+          <ChevronDown size={12} className="text-zinc-400 dark:text-zinc-600 flex-shrink-0 hidden sm:block" />
+        </button>
       </div>
     </header>
   );

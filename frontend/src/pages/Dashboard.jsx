@@ -6,9 +6,10 @@ import {
 } from 'recharts';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { ArrowRight, TrendingUp, Sprout, BrainCircuit, BookOpen, BarChart3 } from 'lucide-react';
+import { ArrowRight, TrendingUp, Sprout, BrainCircuit, BookOpen, BarChart3, Activity } from 'lucide-react';
 
-const weeklyPredictions = [
+/* ── Data ── */
+const weeklyData = [
   { day: 'Mon', predictions: 12, accuracy: 88 },
   { day: 'Tue', predictions: 18, accuracy: 91 },
   { day: 'Wed', predictions: 15, accuracy: 85 },
@@ -18,16 +19,16 @@ const weeklyPredictions = [
   { day: 'Sun', predictions: 10, accuracy: 89 },
 ];
 
-const cropDistribution = [
+const cropDist = [
   { name: 'Wheat',   value: 28, color: '#eab308' },
   { name: 'Rice',    value: 22, color: '#22c55e' },
   { name: 'Cotton',  value: 15, color: '#8b5cf6' },
   { name: 'Maize',   value: 12, color: '#f97316' },
   { name: 'Soybean', value: 10, color: '#06b6d4' },
-  { name: 'Others',  value: 13, color: '#94a3b8' },
+  { name: 'Others',  value: 13, color: '#71717a' },
 ];
 
-const soilUsage = [
+const soilData = [
   { soil: 'Loamy', count: 45 },
   { soil: 'Clay',  count: 30 },
   { soil: 'Sandy', count: 25 },
@@ -35,256 +36,254 @@ const soilUsage = [
   { soil: 'Silt',  count: 15 },
 ];
 
-const recentPredictions = [
-  { id: 1, crop: 'Wheat 🌿',  soil: 'Sandy', season: 'Rabi',   weather: 'Dry',   date: '2025-04-22' },
-  { id: 2, crop: 'Rice 🍚',   soil: 'Clay',  season: 'Kharif', weather: 'Humid', date: '2025-04-22' },
-  { id: 3, crop: 'Cotton 🌸', soil: 'Loamy', season: 'Kharif', weather: 'Hot',   date: '2025-04-21' },
-  { id: 4, crop: 'Tomato 🍅', soil: 'Loamy', season: 'Zaid',   weather: 'Hot',   date: '2025-04-21' },
-  { id: 5, crop: 'Potato 🥔', soil: 'Loamy', season: 'Rabi',   weather: 'Cool',  date: '2025-04-20' },
+const recent = [
+  { id:1, crop:'Wheat 🌿',  soil:'Sandy', season:'Rabi',   weather:'Dry',   conf: 88, date:'Apr 22' },
+  { id:2, crop:'Rice 🍚',   soil:'Clay',  season:'Kharif', weather:'Humid', conf: 97, date:'Apr 22' },
+  { id:3, crop:'Cotton 🌸', soil:'Loamy', season:'Kharif', weather:'Hot',   conf: 91, date:'Apr 21' },
+  { id:4, crop:'Tomato 🍅', soil:'Loamy', season:'Zaid',   weather:'Hot',   conf: 92, date:'Apr 21' },
+  { id:5, crop:'Potato 🥔', soil:'Loamy', season:'Rabi',   weather:'Cool',  conf: 93, date:'Apr 20' },
 ];
 
 const STATS = [
-  {
-    title: 'Total Predictions', value: '1,247', change: '+18%',  trend: 'up', icon: Sprout,
-    light: 'bg-green-50 border-green-200',   dark: 'dark:bg-green-500/5 dark:border-green-500/15',
-    iconBg: 'bg-green-100 dark:bg-green-500/15', iconColor: 'text-green-600 dark:text-green-400',
-    badge: 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400',
-  },
-  {
-    title: 'ML Predictions',    value: '342',   change: '+7%',   trend: 'up', icon: BrainCircuit,
-    light: 'bg-violet-50 border-violet-200', dark: 'dark:bg-violet-500/5 dark:border-violet-500/15',
-    iconBg: 'bg-violet-100 dark:bg-violet-500/15', iconColor: 'text-violet-600 dark:text-violet-400',
-    badge: 'bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400',
-  },
-  {
-    title: 'Expert Rules',      value: '25',    change: 'Rules', trend: null, icon: BookOpen,
-    light: 'bg-amber-50 border-amber-200',   dark: 'dark:bg-amber-500/5 dark:border-amber-500/15',
-    iconBg: 'bg-amber-100 dark:bg-amber-500/15', iconColor: 'text-amber-600 dark:text-amber-400',
-    badge: 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  },
-  {
-    title: 'Model Accuracy',    value: '91.2%', change: '+2.1%', trend: 'up', icon: BarChart3,
-    light: 'bg-blue-50 border-blue-200',     dark: 'dark:bg-blue-500/5 dark:border-blue-500/15',
-    iconBg: 'bg-blue-100 dark:bg-blue-500/15', iconColor: 'text-blue-600 dark:text-blue-400',
-    badge: 'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400',
-  },
+  { label: 'Total Predictions', value: '1,247', sub: '+18% this week', icon: Sprout,      color: '#22c55e', bg: 'bg-green-50 dark:bg-green-500/[0.06]',   border: 'border-green-100 dark:border-green-500/15' },
+  { label: 'ML Predictions',    value: '342',   sub: '+7% this week',  icon: BrainCircuit,color: '#8b5cf6', bg: 'bg-violet-50 dark:bg-violet-500/[0.06]', border: 'border-violet-100 dark:border-violet-500/15' },
+  { label: 'Expert Rules',      value: '25',    sub: 'Knowledge base', icon: BookOpen,    color: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-500/[0.06]',   border: 'border-amber-100 dark:border-amber-500/15' },
+  { label: 'Model Accuracy',    value: '91.2%', sub: '+2.1% improved', icon: BarChart3,   color: '#3b82f6', bg: 'bg-blue-50 dark:bg-blue-500/[0.06]',     border: 'border-blue-100 dark:border-blue-500/15'   },
 ];
 
-const QUICK_ACTIONS = [
-  { to: '/expert',     emoji: '🧠', title: 'Expert System',  desc: 'IF-THEN crop prediction',  accent: 'green'  },
-  { to: '/simulation', emoji: '🌦️', title: 'Simulation',     desc: 'Live environment forecast', accent: 'orange' },
-  { to: '/ml',         emoji: '🤖', title: 'ML Prediction',  desc: 'AI yield forecast',         accent: 'violet' },
-  { to: '/history',    emoji: '📋', title: 'View History',   desc: 'Past prediction results',   accent: 'blue'   },
+const ACTIONS = [
+  { to:'/expert',     emoji:'🧠', label:'Expert System',  sub:'IF-THEN inference',     color:'#22c55e' },
+  { to:'/simulation', emoji:'🌦️', label:'Simulation',     sub:'Live environment',      color:'#f97316' },
+  { to:'/ml',         emoji:'🤖', label:'ML Prediction',  sub:'Yield forecasting',     color:'#8b5cf6' },
+  { to:'/history',    emoji:'📋', label:'View History',   sub:'Past predictions',      color:'#3b82f6' },
 ];
 
-const qaAccent = {
-  green:  { card: 'hover:border-green-300 dark:hover:border-green-500/30 hover:bg-green-50 dark:hover:bg-green-500/5',  dot: 'bg-green-500'  },
-  orange: { card: 'hover:border-orange-300 dark:hover:border-orange-500/30 hover:bg-orange-50 dark:hover:bg-orange-500/5', dot: 'bg-orange-500' },
-  violet: { card: 'hover:border-violet-300 dark:hover:border-violet-500/30 hover:bg-violet-50 dark:hover:bg-violet-500/5', dot: 'bg-violet-500' },
-  blue:   { card: 'hover:border-blue-300 dark:hover:border-blue-500/30 hover:bg-blue-50 dark:hover:bg-blue-500/5',     dot: 'bg-blue-500'   },
+const seasonTag = {
+  Kharif: 'text-green-600 bg-green-50 dark:bg-green-500/10 dark:text-green-400',
+  Rabi:   'text-blue-600 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400',
+  Zaid:   'text-amber-600 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-400',
 };
 
-const seasonColor = {
-  Kharif: 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400',
-  Rabi:   'bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400',
-  Zaid:   'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',
-};
-
-function LiveWeather() {
-  const [w, setW] = useState({ temp: 28, humidity: 65, rainfall: 12, soilMoisture: 45 });
+/* ── Live weather strip ── */
+function WeatherStrip() {
+  const [w, setW] = useState({ temp:28, hum:65, rain:12, soil:45 });
   useEffect(() => {
     const t = setInterval(() => setW(p => ({
-      temp:         Math.round(Math.max(15, Math.min(45, p.temp         + (Math.random()-.5)*2))),
-      humidity:     Math.round(Math.max(20, Math.min(95, p.humidity     + (Math.random()-.5)*3))),
-      rainfall:     Math.round(Math.max(0,  Math.min(50, p.rainfall     + (Math.random()-.5)*2))),
-      soilMoisture: Math.round(Math.max(10, Math.min(90, p.soilMoisture + (Math.random()-.5)*2))),
-    })), 3000);
+      temp: Math.round(Math.max(15,Math.min(45,p.temp+(Math.random()-.5)*2))),
+      hum:  Math.round(Math.max(20,Math.min(95,p.hum +(Math.random()-.5)*3))),
+      rain: Math.round(Math.max(0, Math.min(50,p.rain+(Math.random()-.5)*2))),
+      soil: Math.round(Math.max(10,Math.min(90,p.soil+(Math.random()-.5)*2))),
+    })), 2500);
     return () => clearInterval(t);
   }, []);
-
   const metrics = [
-    { label: 'Temperature',   value: `${w.temp}°C`,        icon: '🌡️', barColor: 'bg-orange-500', pct: (w.temp/45)*100    },
-    { label: 'Humidity',      value: `${w.humidity}%`,     icon: '💧', barColor: 'bg-blue-500',   pct: w.humidity          },
-    { label: 'Rainfall',      value: `${w.rainfall}mm`,    icon: '🌧️', barColor: 'bg-cyan-500',   pct: (w.rainfall/50)*100 },
-    { label: 'Soil Moisture', value: `${w.soilMoisture}%`, icon: '🌱', barColor: 'bg-green-500',  pct: w.soilMoisture      },
+    { label:'Temp',     val:`${w.temp}°C`,  icon:'🌡️', pct:(w.temp/45)*100,   bar:'bg-orange-400' },
+    { label:'Humidity', val:`${w.hum}%`,    icon:'💧', pct:w.hum,             bar:'bg-blue-400'   },
+    { label:'Rainfall', val:`${w.rain}mm`,  icon:'🌧️', pct:(w.rain/50)*100,   bar:'bg-cyan-400'   },
+    { label:'Soil',     val:`${w.soil}%`,   icon:'🌱', pct:w.soil,            bar:'bg-green-400'  },
   ];
-
   return (
-    <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-2xl p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Live Weather Feed</h3>
-        <span className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 font-semibold">
-          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Live
-        </span>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {metrics.map(m => (
-          <div key={m.label} className="bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-xl p-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-500 dark:text-slate-500 font-medium">{m.label}</span>
-              <span className="text-base">{m.icon}</span>
-            </div>
-            <p className="text-xl font-bold text-slate-900 dark:text-white mb-2">{m.value}</p>
-            <div className="h-1 bg-slate-200 dark:bg-white/[0.06] rounded-full overflow-hidden">
-              <div className={`h-full ${m.barColor} rounded-full transition-all duration-700`} style={{ width: `${Math.min(100, m.pct)}%` }} />
-            </div>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {metrics.map(m => (
+        <div key={m.label} className="bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-100 dark:border-zinc-800 rounded-xl p-3">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] text-zinc-500 font-medium">{m.label}</span>
+            <span className="text-base leading-none">{m.icon}</span>
           </div>
-        ))}
-      </div>
+          <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">{m.val}</p>
+          <div className="h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+            <div className={`h-full ${m.bar} rounded-full transition-all duration-700`} style={{width:`${Math.min(100,m.pct)}%`}} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
-function TooltipStyle(dark) {
-  return dark
-    ? { backgroundColor: '#0d1117', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: '#e2e8f0' }
-    : { backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', color: '#1e293b', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' };
+/* ── Custom tooltip ── */
+function ChartTip({ active, payload, label, dark }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3 shadow-xl text-[12px]">
+      <p className="font-semibold text-zinc-900 dark:text-zinc-100 mb-1.5">{label}</p>
+      {payload.map(p => (
+        <p key={p.name} className="text-zinc-500 dark:text-zinc-400">
+          <span className="font-medium" style={{color:p.color}}>{p.name}: </span>{p.value}
+        </p>
+      ))}
+    </div>
+  );
 }
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { dark } = useTheme();
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
-  const tt = TooltipStyle(dark);
+  const greeting = hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
 
   return (
-    <div className="space-y-5 fade-in">
+    <div className="space-y-4 fade-in">
 
-      {/* ── Welcome Banner ── */}
-      <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-green-600 to-emerald-700 dark:from-green-950/80 dark:to-emerald-950/60 dark:border dark:border-green-500/20 shadow-lg shadow-green-500/10">
-        <div className="absolute right-0 top-0 bottom-0 w-48 flex items-center justify-end pr-8 text-8xl opacity-10 pointer-events-none select-none">🌾</div>
-        <div className="relative">
-          <p className="text-green-200 dark:text-green-400/70 text-sm font-medium mb-1">{greeting} 👋</p>
-          <h2 className="text-2xl font-bold text-white">{user?.name || 'Welcome'}</h2>
-          <p className="text-green-100/70 dark:text-slate-400 text-sm mt-1 max-w-md">
-            Your smart agriculture dashboard — make data-driven farming decisions today.
-          </p>
-          <div className="flex flex-wrap gap-2.5 mt-4">
-            <Link to="/expert" className="text-xs bg-white/20 hover:bg-white/30 border border-white/30 text-white px-4 py-2 rounded-xl transition-all font-semibold backdrop-blur-sm">
-              🧠 Get Crop Advice
+      {/* ── Welcome + Stats bento row ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        {/* Welcome card — spans 1 col */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 p-6 flex flex-col justify-between min-h-[140px] shadow-glow-green">
+          {/* dot overlay */}
+          <div className="absolute inset-0 bg-dot-pattern opacity-[0.12]" />
+          {/* animated gradient border */}
+          <div className="absolute inset-0 rounded-2xl gradient-border opacity-60" />
+
+          <div className="relative">
+            <p className="text-green-200 text-xs font-medium mb-1">{greeting} 👋</p>
+            <h2 className="text-xl font-bold text-white leading-tight">{user?.name}</h2>
+            <p className="text-green-200/70 text-xs mt-1">Smart farming decisions, powered by AI</p>
+          </div>
+          <div className="relative flex flex-wrap gap-2 mt-3">
+            <Link to="/expert" className="text-[11px] font-semibold bg-white/20 hover:bg-white/30 border border-white/20 text-white px-3 py-1.5 rounded-lg transition-all backdrop-blur-sm flex items-center gap-1.5">
+              <span>🧠</span> Expert System
             </Link>
-            <Link to="/ml" className="text-xs bg-white/10 hover:bg-white/20 border border-white/20 text-white/80 hover:text-white px-4 py-2 rounded-xl transition-all font-medium">
-              🤖 Run ML Prediction
+            <Link to="/ml" className="text-[11px] font-medium bg-white/10 hover:bg-white/20 border border-white/15 text-white/80 hover:text-white px-3 py-1.5 rounded-lg transition-all">
+              🤖 ML Predict
             </Link>
           </div>
         </div>
-      </div>
 
-      {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {STATS.map(s => (
-          <div key={s.title} className={`bg-white ${s.light} ${s.dark} border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200`}>
-            <div className="flex items-start justify-between mb-3">
-              <div className={`w-10 h-10 rounded-xl ${s.iconBg} flex items-center justify-center`}>
-                <s.icon size={19} className={s.iconColor} />
+        {/* Stat cards — span 2 cols in a 2x2 grid */}
+        <div className="lg:col-span-2 grid grid-cols-2 gap-3">
+          {STATS.map(s => (
+            <div key={s.label} className={`relative rounded-xl border p-4 ${s.bg} ${s.border} hover:shadow-sm transition-all duration-200 overflow-hidden`}>
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{background:`${s.color}18`}}>
+                  <s.icon size={16} style={{color:s.color}} />
+                </div>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5"
+                  style={{background:`${s.color}15`, color:s.color}}>
+                  {s.sub.includes('%') && <TrendingUp size={8} />} {s.sub}
+                </span>
               </div>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${s.badge}`}>
-                {s.trend === 'up' && <TrendingUp size={10} className="inline mr-0.5" />}
-                {s.change}
-              </span>
+              <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{s.value}</p>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-500 mt-0.5">{s.label}</p>
             </div>
-            <p className="text-3xl font-bold text-slate-900 dark:text-white mb-0.5">{s.value}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-500 font-medium">{s.title}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* ── Charts Row ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        {/* Area chart */}
-        <div className="xl:col-span-2 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-2xl p-5 shadow-sm">
+      {/* ── Charts bento row ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+
+        {/* Area chart — 2 cols */}
+        <div className="xl:col-span-2 bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Weekly Prediction Trend</h3>
-            <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">Last 7 days</span>
+            <div>
+              <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">Weekly Predictions</p>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-500 mt-0.5">Prediction volume and accuracy trend</p>
+            </div>
+            <div className="flex items-center gap-3 text-[11px] text-zinc-500">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" />Volume</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />Accuracy</span>
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={210}>
-            <AreaChart data={weeklyPredictions}>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={weeklyData} margin={{top:4, right:4, bottom:0, left:-20}}>
               <defs>
-                <linearGradient id="predG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#22c55e" stopOpacity={dark ? 0.25 : 0.15} />
+                <linearGradient id="gP" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#22c55e" stopOpacity={dark?0.2:0.12} />
                   <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                 </linearGradient>
-                <linearGradient id="accG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#f59e0b" stopOpacity={dark ? 0.2 : 0.12} />
+                <linearGradient id="gA" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#f59e0b" stopOpacity={dark?0.18:0.1} />
                   <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'} />
-              <XAxis dataKey="day" tick={{ fontSize: 11, fill: dark ? '#64748b' : '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: dark ? '#64748b' : '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={tt} />
-              <Area type="monotone" dataKey="predictions" stroke="#22c55e" strokeWidth={2.5} fill="url(#predG)" name="Predictions" dot={false} />
-              <Area type="monotone" dataKey="accuracy"    stroke="#f59e0b" strokeWidth={2.5} fill="url(#accG)"  name="Accuracy %" dot={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={dark?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.04)'} />
+              <XAxis dataKey="day" tick={{fontSize:11,fill:dark?'#71717a':'#a1a1aa'}} axisLine={false} tickLine={false} />
+              <YAxis tick={{fontSize:10,fill:dark?'#71717a':'#a1a1aa'}} axisLine={false} tickLine={false} />
+              <Tooltip content={<ChartTip dark={dark} />} />
+              <Area type="monotone" dataKey="predictions" stroke="#22c55e" strokeWidth={2} fill="url(#gP)" name="Predictions" dot={false} />
+              <Area type="monotone" dataKey="accuracy"    stroke="#f59e0b" strokeWidth={2} fill="url(#gA)" name="Accuracy %" dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Pie chart */}
-        <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-2xl p-5 shadow-sm">
-          <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-4">Crop Distribution</h3>
-          <ResponsiveContainer width="100%" height={170}>
+        {/* Donut chart — 1 col */}
+        <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
+          <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 mb-0.5">Crop Distribution</p>
+          <p className="text-[11px] text-zinc-500 mb-3">By prediction volume</p>
+          <ResponsiveContainer width="100%" height={150}>
             <PieChart>
-              <Pie data={cropDistribution} cx="50%" cy="50%" innerRadius={48} outerRadius={76} paddingAngle={3} dataKey="value">
-                {cropDistribution.map((e, i) => <Cell key={i} fill={e.color} />)}
+              <Pie data={cropDist} cx="50%" cy="50%" innerRadius={42} outerRadius={68} paddingAngle={2} dataKey="value" stroke="none">
+                {cropDist.map((e,i) => <Cell key={i} fill={e.color} />)}
               </Pie>
-              <Tooltip contentStyle={tt} formatter={v => `${v}%`} />
+              <Tooltip content={<ChartTip dark={dark} />} formatter={v=>`${v}%`} />
             </PieChart>
           </ResponsiveContainer>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mt-2">
-            {cropDistribution.map(c => (
-              <div key={c.name} className="flex items-center gap-1.5 text-xs">
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c.color }} />
-                <span className="text-slate-500 dark:text-slate-500 truncate">{c.name} <span className="font-semibold text-slate-700 dark:text-slate-300">{c.value}%</span></span>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mt-1">
+            {cropDist.map(c => (
+              <div key={c.name} className="flex items-center gap-1.5 text-[11px]">
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{background:c.color}} />
+                <span className="text-zinc-500 dark:text-zinc-500 truncate">{c.name} <b className="text-zinc-700 dark:text-zinc-300">{c.value}%</b></span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── Bottom Row ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        {/* Soil usage */}
-        <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-2xl p-5 shadow-sm">
-          <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-4">Soil Type Usage</h3>
-          <ResponsiveContainer width="100%" height={170}>
-            <BarChart data={soilUsage} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke={dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'} />
-              <XAxis type="number" tick={{ fontSize: 10, fill: dark ? '#64748b' : '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis dataKey="soil" type="category" tick={{ fontSize: 11, fill: dark ? '#94a3b8' : '#64748b' }} width={44} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={tt} />
-              <Bar dataKey="count" fill="#22c55e" radius={[0, 5, 5, 0]} name="Queries" />
+      {/* ── Bottom bento ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+
+        {/* Soil bar chart */}
+        <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
+          <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 mb-4">Soil Type Usage</p>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={soilData} layout="vertical" margin={{top:0,right:8,bottom:0,left:-10}}>
+              <CartesianGrid strokeDasharray="3 3" stroke={dark?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.04)'} />
+              <XAxis type="number" tick={{fontSize:10,fill:dark?'#71717a':'#a1a1aa'}} axisLine={false} tickLine={false} />
+              <YAxis dataKey="soil" type="category" tick={{fontSize:11,fill:dark?'#a1a1aa':'#71717a'}} width={42} axisLine={false} tickLine={false} />
+              <Tooltip content={<ChartTip dark={dark} />} />
+              <Bar dataKey="count" fill="#22c55e" radius={[0,4,4,0]} name="Queries" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Recent predictions */}
-        <div className="xl:col-span-2 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Recent Predictions</h3>
-            <Link to="/history" className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-semibold transition-colors">
-              View all <ArrowRight size={13} />
+        {/* Recent table — 2 cols */}
+        <div className="xl:col-span-2 bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+            <div>
+              <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">Recent Predictions</p>
+              <p className="text-[11px] text-zinc-500 mt-0.5">Latest expert & ML results</p>
+            </div>
+            <Link to="/history" className="flex items-center gap-1 text-[11px] text-green-600 dark:text-green-400 font-semibold hover:text-green-700 dark:hover:text-green-300 transition-colors">
+              View all <ArrowRight size={12} />
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-[12px]">
               <thead>
-                <tr className="text-left text-xs text-slate-400 dark:text-slate-600 border-b border-slate-100 dark:border-white/[0.05]">
-                  {['Crop', 'Soil', 'Season', 'Weather', 'Date'].map(h => (
-                    <th key={h} className="pb-2.5 font-semibold uppercase tracking-wider text-[10px]">{h}</th>
+                <tr className="text-left border-b border-zinc-100 dark:border-zinc-800">
+                  {['Crop','Soil','Season','Weather','Conf.','Date'].map(h=>(
+                    <th key={h} className="px-4 py-2.5 text-[10px] font-bold text-zinc-400 dark:text-zinc-600 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {recentPredictions.map(p => (
-                  <tr key={p.id} className="border-b border-slate-100 dark:border-white/[0.04] hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 font-semibold text-slate-900 dark:text-white">{p.crop}</td>
-                    <td className="py-3 text-slate-500 dark:text-slate-400 capitalize">{p.soil}</td>
-                    <td className="py-3">
-                      <span className={`text-[10px] px-2.5 py-1 rounded-full font-semibold capitalize ${seasonColor[p.season]}`}>{p.season}</span>
+                {recent.map(p => (
+                  <tr key={p.id} className="border-b border-zinc-50 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                    <td className="px-4 py-2.5 font-semibold text-zinc-900 dark:text-zinc-100">{p.crop}</td>
+                    <td className="px-4 py-2.5 text-zinc-500 dark:text-zinc-400 capitalize">{p.soil}</td>
+                    <td className="px-4 py-2.5">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-semibold capitalize ${seasonTag[p.season]||''}`}>{p.season}</span>
                     </td>
-                    <td className="py-3 text-slate-500 dark:text-slate-400">{p.weather}</td>
-                    <td className="py-3 text-slate-400 dark:text-slate-600 text-xs">{p.date}</td>
+                    <td className="px-4 py-2.5 text-zinc-500 dark:text-zinc-400">{p.weather}</td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-10 h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-green-500 rounded-full" style={{width:`${p.conf}%`}} />
+                        </div>
+                        <span className="text-zinc-600 dark:text-zinc-400 font-medium">{p.conf}%</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5 text-zinc-400 dark:text-zinc-600">{p.date}</td>
                   </tr>
                 ))}
               </tbody>
@@ -293,29 +292,37 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Quick Actions ── */}
-      <div>
-        <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-3">Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {QUICK_ACTIONS.map(a => {
-            const ac = qaAccent[a.accent];
-            return (
-              <Link key={a.to} to={a.to}
-                className={`group bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] ${ac.card} rounded-2xl p-4 transition-all duration-200 flex items-center gap-3 shadow-sm hover:shadow-md`}>
-                <span className="text-2xl flex-shrink-0">{a.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-slate-900 dark:text-white font-semibold text-sm truncate">{a.title}</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{a.desc}</p>
-                </div>
-                <ArrowRight size={15} className="text-slate-400 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-              </Link>
-            );
-          })}
-        </div>
+      {/* ── Quick actions ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {ACTIONS.map(a => (
+          <Link key={a.to} to={a.to}
+            className="group relative overflow-hidden bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-sm transition-all duration-200">
+            <div className="absolute bottom-0 right-0 w-16 h-16 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 blur-2xl"
+              style={{background:`${a.color}40`}} />
+            <span className="text-2xl mb-2 block">{a.emoji}</span>
+            <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">{a.label}</p>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-500 mt-0.5">{a.sub}</p>
+            <div className="flex items-center gap-0.5 mt-2 text-[11px] font-semibold transition-colors" style={{color:a.color}}>
+              Open <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </Link>
+        ))}
       </div>
 
-      {/* ── Live Weather ── */}
-      <LiveWeather />
+      {/* ── Live weather ── */}
+      <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100">Live Weather Feed</p>
+            <p className="text-[11px] text-zinc-500 mt-0.5">Updates every 2.5 seconds</p>
+          </div>
+          <span className="flex items-center gap-1.5 text-[11px] text-green-600 dark:text-green-400 font-semibold">
+            <Activity size={12} className="animate-pulse" /> Live
+          </span>
+        </div>
+        <WeatherStrip />
+      </div>
+
     </div>
   );
 }
