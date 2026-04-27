@@ -2,35 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Google Fonts: Inter + Geist (21st.dev style) ── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+/* ── Fonts: DM Sans (body) + DM Mono (data) ── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-/* ── Base ── */
+/* ── Base reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { font-size: 16px; }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   background-color: #fafafa;
   color: #09090b;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.2s, color 0.2s;
 }
+.dark body { background-color: #09090b; color: #fafafa; }
 
-.dark body {
-  background-color: #09090b;
-  color: #fafafa;
-}
-
-/* ── 21st.dev scrollbar ── */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 99px; }
 .dark ::-webkit-scrollbar-thumb { background: #27272a; }
 
-/* ── Dot grid background (21st.dev pattern) ── */
+/* ══════════════════════════════════════════
+   21ST.DEV PATTERN LIBRARY
+══════════════════════════════════════════ */
+
+/* ── Dot grid ── */
 .bg-dot-pattern {
   background-image: radial-gradient(circle, #d4d4d8 1px, transparent 1px);
   background-size: 24px 24px;
@@ -40,7 +39,7 @@ body {
   background-size: 24px 24px;
 }
 
-/* ── Grid line background ── */
+/* ── Grid lines ── */
 .bg-grid-pattern {
   background-image:
     linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
@@ -53,35 +52,92 @@ body {
     linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
 }
 
-/* ── Animated gradient border (21st.dev signature) ── */
+/* ── Aurora animated blobs ── */
+@keyframes aurora-drift-1 {
+  0%,100% { transform: translate(0%, 0%) scale(1);    opacity: 0.6; }
+  33%      { transform: translate(15%,-12%) scale(1.2); opacity: 0.8; }
+  66%      { transform: translate(-8%, 10%) scale(0.9); opacity: 0.5; }
+}
+@keyframes aurora-drift-2 {
+  0%,100% { transform: translate(0%, 0%) scale(1.1);  opacity: 0.5; }
+  33%      { transform: translate(-18%, 8%) scale(0.9); opacity: 0.7; }
+  66%      { transform: translate(10%,-15%) scale(1.3); opacity: 0.4; }
+}
+@keyframes aurora-drift-3 {
+  0%,100% { transform: translate(0%, 0%) scale(1);    opacity: 0.4; }
+  50%      { transform: translate(12%, 18%) scale(1.15); opacity: 0.65; }
+}
+
+.aurora-blob-1 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  animation: aurora-drift-1 12s ease-in-out infinite;
+}
+.aurora-blob-2 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: aurora-drift-2 16s ease-in-out infinite;
+}
+.aurora-blob-3 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  pointer-events: none;
+  animation: aurora-drift-3 10s ease-in-out infinite;
+}
+
+/* ── Gradient shift (borders, backgrounds) ── */
 @keyframes gradient-shift {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-
 .animate-gradient {
   animation: gradient-shift 6s ease infinite;
   background-size: 300% 300%;
 }
 
-/* ── Shimmer loading ── */
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* ── Text shimmer ── */
+@keyframes text-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
 }
-.shimmer {
-  background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.08) 50%, transparent 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+.text-shimmer {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.6) 0%,
+    #fff 30%,
+    rgba(255,255,255,0.6) 50%,
+    #fff 70%,
+    rgba(255,255,255,0.6) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer 3.5s linear infinite;
 }
 
-/* ── Fade in ── */
+/* ── Number glow pulse ── */
+@keyframes number-glow {
+  0%,100% { text-shadow: 0 0 0px transparent; }
+  50%      { text-shadow: 0 0 20px currentColor; }
+}
+.number-glow { animation: number-glow 3s ease-in-out infinite; }
+
+/* ── Fade in up (staggered) ── */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.fade-in { animation: fadeInUp 0.35s ease-out forwards; }
+.fade-in   { animation: fadeInUp 0.35s ease-out forwards; }
+.fade-in-1 { animation: fadeInUp 0.4s ease-out 0.05s both; }
+.fade-in-2 { animation: fadeInUp 0.4s ease-out 0.12s both; }
+.fade-in-3 { animation: fadeInUp 0.4s ease-out 0.19s both; }
+.fade-in-4 { animation: fadeInUp 0.4s ease-out 0.26s both; }
 
 /* ── Scale in ── */
 @keyframes scaleIn {
@@ -90,7 +146,7 @@ body {
 }
 .scale-in { animation: scaleIn 0.25s ease-out forwards; }
 
-/* ── Spotlight (hero effect) ── */
+/* ── Spotlight hero ── */
 @keyframes spotlight {
   0%   { opacity: 0; transform: translate(-72%, -62%) skewX(-17deg); }
   100% { opacity: 1; transform: translate(-50%, -40%) skewX(-17deg); }
@@ -99,55 +155,79 @@ body {
 
 /* ── Pulse ring ── */
 @keyframes pulseRing {
-  0%   { transform: scale(1); opacity: 0.8; }
-  100% { transform: scale(1.5); opacity: 0; }
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0;   }
 }
-.pulse-ring {
-  animation: pulseRing 1.5s ease-out infinite;
-}
+.pulse-ring { animation: pulseRing 1.5s ease-out infinite; }
 
-/* ── 21st.dev glass card ── */
+/* ── Float ── */
+@keyframes float {
+  0%,100% { transform: translateY(0px);  }
+  50%      { transform: translateY(-6px); }
+}
+.float { animation: float 4s ease-in-out infinite; }
+
+/* ══════════════════════════════════════════
+   COMPONENT CLASSES
+══════════════════════════════════════════ */
 @layer components {
+
+  /* Glass surface */
   .glass-card {
-    @apply bg-white/60 dark:bg-zinc-900/60 backdrop-blur-xl
+    @apply bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl
            border border-zinc-200/60 dark:border-zinc-800/60
-           rounded-2xl shadow-sm;
+           rounded-2xl;
   }
   .glass-card-hover {
-    @apply glass-card hover:bg-white/80 dark:hover:bg-zinc-900/80
+    @apply glass-card hover:bg-white/90 dark:hover:bg-zinc-900/90
            hover:border-zinc-300 dark:hover:border-zinc-700
            hover:shadow-md transition-all duration-200;
   }
+
+  /* Zinc surface */
   .zinc-surface {
-    @apply bg-zinc-50 dark:bg-zinc-900
+    @apply bg-white dark:bg-zinc-900/40
            border border-zinc-200 dark:border-zinc-800
            rounded-2xl;
   }
+
+  /* Glow */
   .inset-glow-green {
     box-shadow: inset 0 -6px 16px rgba(34,197,94,0.08), 0 0 0 1px rgba(34,197,94,0.1);
   }
-  .gradient-border {
-    position: relative;
-  }
+
+  /* Gradient border (21st.dev signature) */
+  .gradient-border { position: relative; }
   .gradient-border::before {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(34,197,94,0.4), rgba(16,185,129,0.2), rgba(99,102,241,0.3));
+    background: linear-gradient(135deg, rgba(34,197,94,0.5), rgba(16,185,129,0.25), rgba(99,102,241,0.35));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
   }
+
+  /* Animated gradient border */
+  .gradient-border-animated::before {
+    background: linear-gradient(135deg, #22c55e, #10b981, #6366f1, #22c55e);
+    background-size: 300% 300%;
+    animation: gradient-shift 4s ease infinite;
+  }
+
+  /* Mono data font */
+  .font-data { font-family: 'DM Mono', monospace; }
+
 }
 
-/* ── Recharts tooltip ── */
+/* ── Recharts ── */
 .recharts-tooltip-wrapper { outline: none !important; }
 
-/* ── Input range thumb ── */
+/* ── Range slider ── */
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 14px; height: 14px;
@@ -160,17 +240,22 @@ input[type=range]::-webkit-slider-thumb {
 }
 input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
-/* ── Gauge animation ── */
-@keyframes fillGauge {
-  from { stroke-dashoffset: 283; }
-  to   { stroke-dashoffset: var(--target-offset); }
-}
-
-/* ── Bounce dots (typing indicator) ── */
+/* ── Bounce dots ── */
 @keyframes bounceTyping {
-  0%, 80%, 100% { transform: translateY(0); }
-  40%           { transform: translateY(-6px); }
+  0%, 80%, 100% { transform: translateY(0);    }
+  40%            { transform: translateY(-6px); }
 }
-.typing-dot:nth-child(1) { animation: bounceTyping 1s ease-in-out 0s infinite; }
+.typing-dot:nth-child(1) { animation: bounceTyping 1s ease-in-out 0s    infinite; }
 .typing-dot:nth-child(2) { animation: bounceTyping 1s ease-in-out 0.15s infinite; }
-.typing-dot:nth-child(3) { animation: bounceTyping 1s ease-in-out 0.3s infinite; }
+.typing-dot:nth-child(3) { animation: bounceTyping 1s ease-in-out 0.3s  infinite; }
+
+/* ── Shimmer loading ── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.08) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}

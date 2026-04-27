@@ -13,7 +13,9 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['DM Mono', 'ui-monospace', 'monospace'],
+        data: ['DM Mono', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
         '3xl': '1.5rem',
