@@ -176,8 +176,8 @@ export default function Dashboard() {
 
               <div className="relative">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center ring-1"
-                    style={{background:`${s.color}12`}} className={`w-8 h-8 rounded-lg flex items-center justify-center`}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{background:`${s.color}12`}}>
                     <s.icon size={15} style={{color:s.color}} />
                   </div>
                   {s.sub.includes('%') && (
