@@ -5,7 +5,6 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { ArrowRight, TrendingUp, Sprout, BrainCircuit, BookOpen, BarChart3, Activity, Zap } from 'lucide-react';
 
 /* ── Data ── */
@@ -136,7 +135,6 @@ function ChartTip({ active, payload, label }) {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { dark } = useTheme();
   const hour = new Date().getHours();
   const greeting = hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
 
