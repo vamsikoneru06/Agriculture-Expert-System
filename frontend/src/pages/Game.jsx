@@ -55,8 +55,8 @@ function makeScenario() {
   const seasons  = ['kharif', 'rabi', 'zaid'];
 
   const weather = weathers[Math.floor(Math.random() * weathers.length)];
-  const season  = seasons [Math.floor(Math.random() * seasons.length)];
-  const soil    = soils   [Math.floor(Math.random() * soils.length)];
+  const season  = seasons[Math.floor(Math.random() * seasons.length)];
+  const soil    = soils[Math.floor(Math.random() * soils.length)];
   const answer  = CROP_MAP[weather][season];
 
   const pool        = ALL_CROPS.filter(c => c !== answer);
@@ -265,9 +265,7 @@ export default function Game() {
   }
 
   /* ── Derived ── */
-  const accuracy    = history.length ? Math.round((history.filter(h => h.correct).length / history.length) * 100) : 0;
-  const grade       = getGrade(accuracy);
-  const maxPossible = totalRounds * 150 * 3; // theoretical max
+  const accuracy = history.length ? Math.round((history.filter(h => h.correct).length / history.length) * 100) : 0;
   const isNewHi     = score > 0 && score >= hiScore && phase === 'results';
 
   /* ══════════════════ T (theme tokens) ══════════════════ */
