@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useTheme } from '../context/ThemeContext';
 import { BrainCircuit, CheckCircle2, TrendingUp } from 'lucide-react';
+import { GlassButton } from '../components/ui/glass-button';
 
 function predictYield(inputs) {
   const { cropType, soilPH, nitrogen, phosphorus, potassium, temperature, rainfall, farmArea } = inputs;
@@ -157,13 +158,19 @@ export default function MLPrediction() {
           <Slider label="Rainfall"    name="rainfall"    value={inputs.rainfall}    min={200} max={2000} unit=" mm"    onChange={handleChange} color="#06b6d4" />
           <Slider label="Farm Area"   name="farmArea"    value={inputs.farmArea}    min={0.5} max={20}   step={0.5} unit=" ha" onChange={handleChange} color="#eab308" />
 
-          <button onClick={handlePredict} disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-white text-[13px] bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-40 transition-all shadow-glow-sm">
+          <GlassButton
+            size="default"
+            onClick={handlePredict}
+            disabled={loading}
+            className="w-full"
+            contentClassName="flex items-center justify-center gap-2 w-full"
+            style={{'--glass-color':'#a78bfa'}}
+          >
             {loading
-              ? <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Running…</>
+              ? <><div className="w-3.5 h-3.5 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin" /> Running…</>
               : <><BrainCircuit size={15}/> Predict Yield</>
             }
-          </button>
+          </GlassButton>
         </div>
 
         {/* Results */}

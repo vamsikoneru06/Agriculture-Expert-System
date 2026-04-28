@@ -5,7 +5,8 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { useAuth } from '../context/AuthContext';
-import { ArrowRight, TrendingUp, Sprout, BrainCircuit, BookOpen, BarChart3, Activity, Zap } from 'lucide-react';
+import { TrendingUp, Sprout, BrainCircuit, BookOpen, BarChart3, Activity, Zap, ArrowRight } from 'lucide-react';
+import AgriShaderCards from '../components/ui/agri-shader-cards';
 
 /* ── Data ── */
 const weeklyData = [
@@ -50,12 +51,6 @@ const STATS = [
   { label:'Model Accuracy',    value:'91.2%', sub:'+2.1% improved',  icon:BarChart3,    color:'#60a5fa' },
 ];
 
-const ACTIONS = [
-  { to:'/expert',     emoji:'🧠', label:'Expert System', sub:'IF-THEN inference',  color:'#4ade80' },
-  { to:'/simulation', emoji:'🌦️', label:'Simulation',    sub:'Live environment',   color:'#fb923c' },
-  { to:'/ml',         emoji:'🤖', label:'ML Prediction', sub:'Yield forecasting',  color:'#a78bfa' },
-  { to:'/history',    emoji:'📋', label:'View History',  sub:'Past predictions',   color:'#60a5fa' },
-];
 
 const seasonTag = {
   Kharif: { text:'#4ade80', bg:'rgba(74,222,128,0.08)',  border:'rgba(74,222,128,0.15)'  },
@@ -372,27 +367,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ══ ROW 4: Quick actions ══ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {ACTIONS.map((a, i) => (
-          <Link key={a.to} to={a.to}
-            className={`fade-in-${i+1} group relative overflow-hidden rounded-2xl p-4 transition-all duration-200 hover:-translate-y-0.5`}
-            style={{background:'rgba(255,255,255,0.03)', border:'1px solid rgba(74,222,128,0.08)'}}
-            onMouseEnter={e => { e.currentTarget.style.border = `1px solid ${a.color}30`; e.currentTarget.style.background = `${a.color}06`; }}
-            onMouseLeave={e => { e.currentTarget.style.border = '1px solid rgba(74,222,128,0.08)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}>
-            {/* Corner glow */}
-            <div className="absolute bottom-0 right-0 w-20 h-20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 blur-2xl"
-              style={{background:`${a.color}25`}} />
-            <span className="text-2xl mb-3 block">{a.emoji}</span>
-            <p className="font-display text-[13px] font-semibold" style={{color:'#d0e8d0'}}>{a.label}</p>
-            <p className="text-[11px] mt-0.5" style={{color:'rgba(180,210,180,0.4)'}}>{a.sub}</p>
-            <div className="flex items-center gap-0.5 mt-3 text-[11px] font-semibold group-hover:gap-1.5 transition-all"
-              style={{color:a.color}}>
-              Open <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
-            </div>
-          </Link>
-        ))}
-      </div>
+      {/* ══ ROW 4: Quick actions — WebGL Shader Cards ══ */}
+      <AgriShaderCards />
 
       {/* ══ ROW 5: Live weather ══ */}
       <Card className="p-5">

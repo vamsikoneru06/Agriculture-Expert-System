@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { matchRules, soilOptions, weatherOptions, seasonOptions, expertRules } from '../data/expertRules';
 import { Search, SlidersHorizontal, CheckCircle2, Bug, Lightbulb, Wheat, ChevronDown } from 'lucide-react';
+import { GlassButton } from '../components/ui/glass-button';
 
 function SelectField({ label, name, value, onChange, options, emoji }) {
   return (
@@ -149,15 +150,23 @@ export default function ExpertSystem() {
               )}
 
               <div className="flex gap-2.5 pt-1">
-                <button onClick={handlePredict} disabled={!isComplete || loading}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-white text-[13px] bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-glow-sm">
+                <GlassButton
+                  size="default"
+                  onClick={handlePredict}
+                  disabled={!isComplete || loading}
+                  className="flex-1"
+                  contentClassName="flex items-center justify-center gap-2 w-full"
+                >
                   {loading
-                    ? <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Inferring…</>
+                    ? <><div className="w-3.5 h-3.5 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin" /> Inferring…</>
                     : <><Search size={14} /> Get Recommendation</>
                   }
-                </button>
+                </GlassButton>
                 <button onClick={handleReset}
-                  className="px-4 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all text-[12px] font-semibold">
+                  className="px-4 py-2.5 rounded-full border text-[12px] font-semibold transition-all"
+                  style={{background:'rgba(255,255,255,0.03)', border:'1px solid rgba(74,222,128,0.12)', color:'rgba(180,210,180,0.6)'}}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#d0e8d0'; e.currentTarget.style.borderColor = 'rgba(74,222,128,0.3)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(180,210,180,0.6)'; e.currentTarget.style.borderColor = 'rgba(74,222,128,0.12)'; }}>
                   Reset
                 </button>
               </div>
