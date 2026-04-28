@@ -18,7 +18,7 @@ const Chatbot      = React.lazy(() => import('./pages/Chatbot'));
 
 function AppLayout() {
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-[#070a0f] transition-colors duration-300">
+    <div className="flex h-screen overflow-hidden bg-[#f7faf7] dark:bg-[#060b06] transition-colors duration-300">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Navbar />
