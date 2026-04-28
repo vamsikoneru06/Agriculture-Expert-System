@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { matchRules, soilOptions, weatherOptions, seasonOptions, expertRules } from '../data/expertRules';
 import { Search, SlidersHorizontal, CheckCircle2, Bug, Lightbulb, Wheat, ChevronDown } from 'lucide-react';
 import { GlassButton } from '../components/ui/glass-button';
+import { useTheme } from '../context/ThemeContext';
 
 function SelectField({ label, name, value, onChange, options, emoji }) {
   return (
@@ -56,6 +57,7 @@ function RuleRow({ rule }) {
 }
 
 export default function ExpertSystem() {
+  const { dark } = useTheme();
   const [form,    setForm]    = useState({ soilType:'', weather:'', season:'' });
   const [result,  setResult]  = useState(null);
   const [loading, setLoading] = useState(false);
@@ -164,9 +166,13 @@ export default function ExpertSystem() {
                 </GlassButton>
                 <button onClick={handleReset}
                   className="px-4 py-2.5 rounded-full border text-[12px] font-semibold transition-all"
-                  style={{background:'rgba(255,255,255,0.03)', border:'1px solid rgba(74,222,128,0.12)', color:'rgba(180,210,180,0.6)'}}
-                  onMouseEnter={e => { e.currentTarget.style.color = '#d0e8d0'; e.currentTarget.style.borderColor = 'rgba(74,222,128,0.3)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(180,210,180,0.6)'; e.currentTarget.style.borderColor = 'rgba(74,222,128,0.12)'; }}>
+                  style={{
+                    background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.75)',
+                    border: dark ? '1px solid rgba(74,222,128,0.12)' : '1px solid rgba(34,139,34,0.2)',
+                    color: dark ? 'rgba(180,210,180,0.6)' : 'rgba(15,47,15,0.65)',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = dark ? '#d0e8d0' : '#0f2f0f'; e.currentTarget.style.borderColor = dark ? 'rgba(74,222,128,0.3)' : 'rgba(34,139,34,0.4)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = dark ? 'rgba(180,210,180,0.6)' : 'rgba(15,47,15,0.65)'; e.currentTarget.style.borderColor = dark ? 'rgba(74,222,128,0.12)' : 'rgba(34,139,34,0.2)'; }}>
                   Reset
                 </button>
               </div>
