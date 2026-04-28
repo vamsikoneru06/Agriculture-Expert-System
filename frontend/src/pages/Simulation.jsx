@@ -1,14 +1,79 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../context/ThemeContext';
 import {
   Play, Square, RotateCcw, Thermometer, Droplets,
-  CloudRain, Leaf, Activity, MapPin, Search, X, Wind, Loader2,
+  CloudRain, Leaf, Activity, MapPin, Search, X, Wind,
+  Loader2, CheckCircle2, Calendar, Sprout, BarChart3,
 } from 'lucide-react';
 import { INDIAN_LOCATIONS } from '../data/indianLocations';
 import { fetchWeather, decodeWeatherCode } from '../services/weatherService';
 
-/* ─────────────────────────── Gauge ─────────────────────────── */
+/* ══════════════════════════════════════════════
+   CONSTANTS
+══════════════════════════════════════════════ */
+const DEFAULT_DATA = { temperature: 28, humidity: 62, rainfall: 8, soilMoisture: 45 };
+const INF = 9999999;
+
+const MAX_TICK_OPTIONS = [
+  { label: '25',  value: 25  },
+  { label: '50',  value: 50  },
+  { label: '100', value: 100 },
+  { label: '200', value: 200 },
+  { label: '∞',   value: INF },
+];
+
+/* Season calendar — shown in results */
+const SEASON_INFO = {
+  kharif: {
+    label: 'Kharif', months: 'Jun – Oct', emoji: '🌾',
+    color: '#4ade80', bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.2)',
+    crops: ['Rice', 'Cotton', 'Maize', 'Soybean', 'Pearl Millet', 'Groundnut'],
+  },
+  rabi: {
+    label: 'Rabi', months: 'Nov – Mar', emoji: '🌿',
+    color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.2)',
+    crops: ['Wheat', 'Barley', 'Mustard', 'Chickpea', 'Peas', 'Potato'],
+  },
+  zaid: {
+    label: 'Zaid', months: 'Apr – Jun', emoji: '🥬',
+    color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.2)',
+    crops: ['Watermelon', 'Cucumber', 'Tomato', 'Brinjal', 'Moong', 'Sunflower'],
+  },
+};
+
+/* ══════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════ */
+function classifyConditions(d) {
+  const soilType = d.soilMoisture > 70 ? 'clay' : d.soilMoisture > 50 ? 'loamy' : 'sandy';
+  const weather  = d.rainfall > 30 ? 'rainy' : d.humidity > 75 ? 'humid' : d.temperature > 35 ? 'hot' : d.humidity < 40 ? 'dry' : 'cool';
+  const m        = new Date().getMonth() + 1;
+  const season   = m >= 6 && m <= 10 ? 'kharif' : m >= 11 || m <= 3 ? 'rabi' : 'zaid';
+  return { soilType, weather, season };
+}
+
+const CROP_MAP = {
+  rainy: { kharif: 'Rice / Jute',    rabi: 'Barley',   zaid: 'Cucumber'   },
+  humid: { kharif: 'Rice',           rabi: 'Mustard',  zaid: 'Brinjal'    },
+  hot:   { kharif: 'Cotton / Maize', rabi: 'Wheat',    zaid: 'Tomato'     },
+  dry:   { kharif: 'Pearl Millet',   rabi: 'Wheat',    zaid: 'Sunflower'  },
+  cool:  { kharif: 'Maize',          rabi: 'Potato',   zaid: 'Watermelon' },
+};
+
+function getCrop(d) {
+  const { weather, season } = classifyConditions(d);
+  return CROP_MAP[weather]?.[season] || 'Pearl Millet';
+}
+
+function getCropForSeason(d, season) {
+  const { weather } = classifyConditions(d);
+  return CROP_MAP[weather]?.[season] || 'Pearl Millet';
+}
+
+/* ══════════════════════════════════════════════
+   GAUGE
+══════════════════════════════════════════════ */
 function Gauge({ value, max, label, unit, hexColor, icon: Icon }) {
   const pct    = Math.min(value / max, 1);
   const radius = 52;
@@ -27,10 +92,10 @@ function Gauge({ value, max, label, unit, hexColor, icon: Icon }) {
             stroke={hexColor}
             strokeDasharray={`${arc-offset} ${circ-(arc-offset)}`}
             strokeLinecap="round"
-            style={{ transition:'stroke-dasharray 0.6s ease', filter:`drop-shadow(0 0 4px ${hexColor}60)` }} />
+            style={{ transition: 'stroke-dasharray 0.6s ease', filter: `drop-shadow(0 0 4px ${hexColor}60)` }} />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <Icon size={16} style={{color:hexColor}} />
+          <Icon size={16} style={{ color: hexColor }} />
           <p className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mt-1">{value}</p>
           <p className="text-[10px] text-zinc-400 font-medium">{unit}</p>
         </div>
@@ -38,7 +103,7 @@ function Gauge({ value, max, label, unit, hexColor, icon: Icon }) {
       <div className="w-full mt-3">
         <div className="h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
           <div className="h-full rounded-full transition-all duration-700"
-            style={{width:`${pct*100}%`,background:hexColor,boxShadow:`0 0 6px ${hexColor}50`}} />
+            style={{ width: `${pct * 100}%`, background: hexColor, boxShadow: `0 0 6px ${hexColor}50` }} />
         </div>
         <div className="flex justify-between text-[10px] text-zinc-400 mt-1">
           <span>0</span><span>{max}{unit}</span>
@@ -48,11 +113,13 @@ function Gauge({ value, max, label, unit, hexColor, icon: Icon }) {
   );
 }
 
-/* ─────────────────────── Location Picker Modal ──────────────── */
+/* ══════════════════════════════════════════════
+   LOCATION PICKER MODAL
+══════════════════════════════════════════════ */
 function LocationPicker({ onSelect, onClose }) {
   const { dark } = useTheme();
   const [search,   setSearch]   = useState('');
-  const [fetching, setFetching] = useState(null); // city name being loaded
+  const [fetching, setFetching] = useState(null);
   const [error,    setError]    = useState('');
   const inputRef = useRef(null);
 
@@ -63,7 +130,6 @@ function LocationPicker({ onSelect, onClose }) {
     loc.state.toLowerCase().includes(search.toLowerCase())
   );
 
-  /* Group filtered list by state */
   const grouped = filtered.reduce((acc, loc) => {
     if (!acc[loc.state]) acc[loc.state] = [];
     acc[loc.state].push(loc);
@@ -76,42 +142,35 @@ function LocationPicker({ onSelect, onClose }) {
     try {
       const weather = await fetchWeather(loc.lat, loc.lng);
       onSelect(loc, weather);
-    } catch (e) {
+    } catch (_) {
       setError('Could not fetch weather — check your internet connection.');
       setFetching(null);
     }
   };
 
-  /* Close on backdrop click */
   const handleBackdrop = (e) => { if (e.target === e.currentTarget) onClose(); };
 
   const T = {
-    bg:      dark ? '#0f1a0f' : '#ffffff',
-    border:  dark ? 'rgba(74,222,128,0.12)' : 'rgba(34,139,34,0.18)',
-    header:  dark ? 'rgba(74,222,128,0.06)' : 'rgba(22,163,74,0.06)',
-    inputBg: dark ? '#0a120a' : '#f0f9f0',
-    inputBdr:dark ? 'rgba(74,222,128,0.15)' : 'rgba(34,139,34,0.25)',
-    title:   dark ? '#d0e8d0' : '#0f2f0f',
-    label:   dark ? 'rgba(74,222,128,0.4)' : 'rgba(22,101,52,0.55)',
-    cityClr: dark ? 'rgba(208,232,208,0.85)' : '#1a3e1a',
-    cityHov: dark ? 'rgba(74,222,128,0.07)' : 'rgba(22,163,74,0.07)',
-    scrollBg:dark ? '#0a120a' : '#f8fdf8',
-    divider: dark ? 'rgba(74,222,128,0.07)' : 'rgba(34,139,34,0.09)',
-    errClr:  '#f87171',
-    placeholder: dark ? 'rgba(180,210,180,0.35)' : 'rgba(15,47,15,0.35)',
+    bg:       dark ? '#0f1a0f'                    : '#ffffff',
+    border:   dark ? 'rgba(74,222,128,0.12)'      : 'rgba(34,139,34,0.18)',
+    header:   dark ? 'rgba(74,222,128,0.06)'      : 'rgba(22,163,74,0.06)',
+    inputBg:  dark ? '#0a120a'                    : '#f0f9f0',
+    inputBdr: dark ? 'rgba(74,222,128,0.15)'      : 'rgba(34,139,34,0.25)',
+    title:    dark ? '#d0e8d0'                    : '#0f2f0f',
+    label:    dark ? 'rgba(74,222,128,0.4)'       : 'rgba(22,101,52,0.55)',
+    cityClr:  dark ? 'rgba(208,232,208,0.85)'     : '#1a3e1a',
+    cityHov:  dark ? 'rgba(74,222,128,0.07)'      : 'rgba(22,163,74,0.07)',
+    scrollBg: dark ? '#0a120a'                    : '#f8fdf8',
+    divider:  dark ? 'rgba(74,222,128,0.07)'      : 'rgba(34,139,34,0.09)',
+    errClr:   '#f87171',
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
       onClick={handleBackdrop}>
-
       <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col"
-        style={{
-          maxHeight: '78vh',
-          background: T.bg,
-          border: `1px solid ${T.border}`,
-        }}>
+        style={{ maxHeight: '78vh', background: T.bg, border: `1px solid ${T.border}` }}>
 
         {/* Header */}
         <div className="px-5 py-4 flex items-center justify-between flex-shrink-0"
@@ -119,16 +178,11 @@ function LocationPicker({ onSelect, onClose }) {
           <div className="flex items-center gap-2.5">
             <MapPin size={16} style={{ color: dark ? '#4ade80' : '#15803d' }} />
             <div>
-              <p className="font-display text-[13px] font-bold" style={{ color: T.title }}>
-                Select Indian Location
-              </p>
-              <p className="text-[10px] mt-0.5" style={{ color: T.label }}>
-                Live weather auto-fetched from Open-Meteo
-              </p>
+              <p className="font-display text-[13px] font-bold" style={{ color: T.title }}>Select Indian Location</p>
+              <p className="text-[10px] mt-0.5" style={{ color: T.label }}>Live weather auto-fetched from Open-Meteo</p>
             </div>
           </div>
-          <button onClick={onClose}
-            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
             style={{ color: T.label }}
             onMouseEnter={e => { e.currentTarget.style.background = T.cityHov; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
@@ -139,26 +193,13 @@ function LocationPicker({ onSelect, onClose }) {
         {/* Search */}
         <div className="px-4 py-3 flex-shrink-0" style={{ borderBottom: `1px solid ${T.divider}` }}>
           <div className="relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2"
-              style={{ color: T.label }} />
-            <input
-              ref={inputRef}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: T.label }} />
+            <input ref={inputRef} value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Search city or state…"
               className="w-full text-[12px] pl-8 pr-3 py-2.5 rounded-xl outline-none transition-all"
-              style={{
-                background: T.inputBg,
-                border: `1px solid ${T.inputBdr}`,
-                color: T.title,
-              }}
-            />
+              style={{ background: T.inputBg, border: `1px solid ${T.inputBdr}`, color: T.title }} />
           </div>
-          {error && (
-            <p className="text-[11px] mt-2 font-medium" style={{ color: T.errClr }}>
-              ⚠ {error}
-            </p>
-          )}
+          {error && <p className="text-[11px] mt-2 font-medium" style={{ color: T.errClr }}>⚠ {error}</p>}
         </div>
 
         {/* City list */}
@@ -171,16 +212,11 @@ function LocationPicker({ onSelect, onClose }) {
           ) : (
             Object.entries(grouped).map(([state, cities]) => (
               <div key={state}>
-                <p className="px-4 pt-3 pb-1 text-[9px] font-bold uppercase tracking-[0.15em]"
-                  style={{ color: T.label }}>
-                  {state}
-                </p>
+                <p className="px-4 pt-3 pb-1 text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: T.label }}>{state}</p>
                 {cities.map(loc => {
                   const isLoading = fetching === loc.city;
                   return (
-                    <button key={loc.city}
-                      onClick={() => !fetching && handlePick(loc)}
-                      disabled={!!fetching}
+                    <button key={loc.city} onClick={() => !fetching && handlePick(loc)} disabled={!!fetching}
                       className="w-full flex items-center justify-between px-4 py-2.5 text-left transition-all"
                       style={{ color: T.cityClr, opacity: fetching && !isLoading ? 0.45 : 1 }}
                       onMouseEnter={e => { if (!fetching) e.currentTarget.style.background = T.cityHov; }}
@@ -189,14 +225,10 @@ function LocationPicker({ onSelect, onClose }) {
                         <MapPin size={11} style={{ color: dark ? 'rgba(74,222,128,0.4)' : 'rgba(22,101,52,0.5)', flexShrink: 0 }} />
                         <span className="text-[12px] font-semibold">{loc.city}</span>
                       </div>
-                      {isLoading ? (
-                        <Loader2 size={12} className="animate-spin" style={{ color: dark ? '#4ade80' : '#15803d' }} />
-                      ) : (
-                        <span className="text-[9px] font-data tabular-nums"
-                          style={{ color: T.label }}>
-                          {loc.lat.toFixed(1)}°N
-                        </span>
-                      )}
+                      {isLoading
+                        ? <Loader2 size={12} className="animate-spin" style={{ color: dark ? '#4ade80' : '#15803d' }} />
+                        : <span className="text-[9px] font-data tabular-nums" style={{ color: T.label }}>{loc.lat.toFixed(1)}°N</span>
+                      }
                     </button>
                   );
                 })}
@@ -206,16 +238,13 @@ function LocationPicker({ onSelect, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-2.5 flex-shrink-0 flex items-center gap-2"
-          style={{ borderTop: `1px solid ${T.divider}` }}>
+        <div className="px-5 py-2.5 flex-shrink-0" style={{ borderTop: `1px solid ${T.divider}` }}>
           <span className="text-[10px]" style={{ color: T.label }}>
             🌐 Powered by{' '}
             <a href="https://open-meteo.com" target="_blank" rel="noreferrer"
-              className="underline font-semibold"
-              style={{ color: dark ? '#4ade80' : '#15803d' }}>
+              className="underline font-semibold" style={{ color: dark ? '#4ade80' : '#15803d' }}>
               Open-Meteo
-            </a>
-            {' '}— Free, no API key
+            </a>{' '}— Free, no API key
           </span>
         </div>
       </div>
@@ -223,28 +252,218 @@ function LocationPicker({ onSelect, onClose }) {
   );
 }
 
-/* ─────────────────────── Condition helpers ───────────────────── */
-function classifyConditions(d) {
-  const soilType = d.soilMoisture > 70 ? 'clay' : d.soilMoisture > 50 ? 'loamy' : 'sandy';
-  const weather  = d.rainfall > 30 ? 'rainy' : d.humidity > 75 ? 'humid' : d.temperature > 35 ? 'hot' : d.humidity < 40 ? 'dry' : 'cool';
-  const m        = new Date().getMonth() + 1;
-  const season   = m >= 6 && m <= 10 ? 'kharif' : m >= 11 || m <= 3 ? 'rabi' : 'zaid';
-  return { soilType, weather, season };
-}
+/* ══════════════════════════════════════════════
+   SIMULATION RESULT PANEL
+══════════════════════════════════════════════ */
+function SimulationResult({ history, location, liveWx, onRestart }) {
+  const { dark } = useTheme();
 
-function getCrop(d) {
-  const { weather, season } = classifyConditions(d);
-  const map = {
-    rainy: { kharif: 'Rice / Jute',    rabi: 'Barley',   zaid: 'Cucumber'   },
-    humid: { kharif: 'Rice',           rabi: 'Mustard',  zaid: 'Brinjal'    },
-    hot:   { kharif: 'Cotton / Maize', rabi: 'Wheat',    zaid: 'Tomato'     },
-    dry:   { kharif: 'Pearl Millet',   rabi: 'Wheat',    zaid: 'Sunflower'  },
-    cool:  { kharif: 'Maize',          rabi: 'Potato',   zaid: 'Watermelon' },
+  /* Average all readings over the run */
+  const avg = useMemo(() => {
+    if (!history.length) return DEFAULT_DATA;
+    const sum = history.reduce((a, h) => ({
+      temperature:  a.temperature  + h.temperature,
+      humidity:     a.humidity     + h.humidity,
+      rainfall:     a.rainfall     + h.rainfall,
+      soilMoisture: a.soilMoisture + h.soilMoisture,
+    }), { temperature: 0, humidity: 0, rainfall: 0, soilMoisture: 0 });
+    const n = history.length;
+    return {
+      temperature:  Math.round(sum.temperature  / n),
+      humidity:     Math.round(sum.humidity     / n),
+      rainfall:     Math.round(sum.rainfall     / n),
+      soilMoisture: Math.round(sum.soilMoisture / n),
+    };
+  }, [history]);
+
+  /* Most frequent crop across all ticks */
+  const dominantCrop = useMemo(() => {
+    const counts = {};
+    history.forEach(h => {
+      const c = getCrop(h);
+      counts[c] = (counts[c] || 0) + 1;
+    });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || getCrop(avg);
+  }, [history, avg]);
+
+  const cond = classifyConditions(avg);
+  const currentSeason = cond.season;
+  const wx = liveWx ? decodeWeatherCode(liveWx.weatherCode) : null;
+
+  const avgStats = [
+    { label: 'Avg Temp',     val: `${avg.temperature}°C`, icon: Thermometer, color: '#f97316' },
+    { label: 'Avg Humidity', val: `${avg.humidity}%`,     icon: Droplets,    color: '#3b82f6' },
+    { label: 'Avg Rainfall', val: `${avg.rainfall}mm`,    icon: CloudRain,   color: '#06b6d4' },
+    { label: 'Avg Soil',     val: `${avg.soilMoisture}%`, icon: Leaf,        color: '#22c55e' },
+  ];
+
+  const T = {
+    card:    dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.92)',
+    border:  dark ? 'rgba(74,222,128,0.1)'  : 'rgba(34,139,34,0.15)',
+    title:   dark ? '#d0e8d0'               : '#0f2f0f',
+    sub:     dark ? 'rgba(180,210,180,0.55)': 'rgba(15,47,15,0.6)',
+    accentL: dark ? 'rgba(74,222,128,0.35)' : 'rgba(22,101,52,0.55)',
+    divider: dark ? 'rgba(74,222,128,0.07)' : 'rgba(34,139,34,0.1)',
+    statBg:  dark ? 'rgba(255,255,255,0.03)': 'rgba(255,255,255,0.75)',
   };
-  return map[weather]?.[season] || 'Pearl Millet';
+
+  return (
+    <div className="rounded-2xl overflow-hidden scale-in"
+      style={{ background: T.card, border: `1px solid ${T.border}` }}>
+
+      {/* ── Gradient hero header ── */}
+      <div className="relative overflow-hidden px-6 py-6 bg-gradient-to-br from-green-700 via-emerald-700 to-teal-800">
+        <div className="absolute inset-0 bg-crop-rows opacity-20 pointer-events-none" />
+        <div className="relative z-10 flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 size={16} className="text-green-300" />
+              <span className="text-[10px] font-bold text-green-200 uppercase tracking-widest">
+                Simulation Complete
+              </span>
+            </div>
+            <h3 className="font-display text-xl font-bold text-white leading-tight">
+              {location ? `${location.city}, ${location.state}` : 'Field Report'}
+            </h3>
+            {location && wx && (
+              <p className="text-[12px] text-green-200 mt-1 flex items-center gap-1.5">
+                <span>{wx.emoji}</span> {wx.desc} · {history.length} ticks recorded
+              </p>
+            )}
+            {!location && (
+              <p className="text-[12px] text-green-200 mt-1">{history.length} ticks recorded</p>
+            )}
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-[9px] text-green-300 uppercase tracking-widest mb-0.5">Current Season</p>
+            <p className="text-white font-bold text-lg capitalize">{currentSeason}</p>
+            <p className="text-[10px] text-green-200">{SEASON_INFO[currentSeason].months}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-5 space-y-5">
+
+        {/* ── Avg stats row ── */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-3" style={{ color: T.accentL }}>
+            Average Conditions over Run
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {avgStats.map(s => (
+              <div key={s.label} className="rounded-xl p-3 text-center"
+                style={{ background: T.statBg, border: `1px solid ${T.border}` }}>
+                <s.icon size={14} style={{ color: s.color, margin: '0 auto 4px' }} />
+                <p className="font-data text-lg font-bold tabular-nums" style={{ color: s.color }}>{s.val}</p>
+                <p className="text-[9px] mt-0.5 font-medium" style={{ color: T.sub }}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Dominant crop result ── */}
+        <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
+          <div className="px-5 py-4 bg-gradient-to-r from-green-600/90 to-emerald-700/90 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] text-green-200 font-bold uppercase tracking-widest mb-0.5">
+                Best Crop for {location?.city || 'This Location'}
+              </p>
+              <p className="text-white font-display text-xl font-bold capitalize">{dominantCrop}</p>
+              <p className="text-green-200 text-[11px] mt-0.5">
+                Based on {history.length}-tick avg · {cond.soilType} soil · {cond.weather} weather
+              </p>
+            </div>
+            <span className="text-5xl opacity-80">🌾</span>
+          </div>
+          <div className="px-5 py-3 flex flex-wrap gap-2" style={{ borderTop: `1px solid ${T.divider}` }}>
+            {[
+              { label: 'Season',   val: cond.season,   },
+              { label: 'Soil',     val: cond.soilType, },
+              { label: 'Weather',  val: cond.weather,  },
+            ].map(b => (
+              <span key={b.label} className="text-[10px] px-2.5 py-1 rounded-lg font-semibold capitalize"
+                style={{ background: dark ? 'rgba(74,222,128,0.08)' : 'rgba(22,163,74,0.08)', color: dark ? '#4ade80' : '#15803d', border: `1px solid ${T.divider}` }}>
+                {b.label}: {b.val}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* ── All 3 seasons breakdown ── */}
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-3 flex items-center gap-1.5"
+            style={{ color: T.accentL }}>
+            <Calendar size={11} /> Crop Calendar for {location?.city || 'This Location'}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {Object.entries(SEASON_INFO).map(([key, info]) => {
+              const isCurrent = key === currentSeason;
+              const recCrop   = getCropForSeason(avg, key);
+              return (
+                <div key={key} className="rounded-xl p-4 relative overflow-hidden"
+                  style={{
+                    background: isCurrent ? info.bg : T.statBg,
+                    border: `1px solid ${isCurrent ? info.border : T.border}`,
+                  }}>
+                  {isCurrent && (
+                    <span className="absolute top-2 right-2 text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                      style={{ background: info.color, color: '#fff' }}>Now</span>
+                  )}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">{info.emoji}</span>
+                    <div>
+                      <p className="font-bold text-[13px]" style={{ color: isCurrent ? info.color : T.title }}>{info.label}</p>
+                      <p className="text-[9px]" style={{ color: T.sub }}>{info.months}</p>
+                    </div>
+                  </div>
+                  {/* Recommended crop for this season */}
+                  <div className="mb-3 rounded-lg px-3 py-2" style={{ background: isCurrent ? `${info.color}15` : T.card, border: `1px solid ${isCurrent ? info.border : T.divider}` }}>
+                    <p className="text-[9px] font-bold uppercase tracking-wider mb-0.5" style={{ color: T.accentL }}>
+                      <Sprout size={9} className="inline mr-1" />Recommended
+                    </p>
+                    <p className="text-[13px] font-bold capitalize" style={{ color: isCurrent ? info.color : T.title }}>{recCrop}</p>
+                  </div>
+                  {/* Other suitable crops */}
+                  <div className="flex flex-wrap gap-1">
+                    {info.crops.slice(0, 4).map(c => (
+                      <span key={c} className="text-[9px] px-1.5 py-0.5 rounded font-medium"
+                        style={{
+                          background: isCurrent ? `${info.color}10` : 'rgba(0,0,0,0.04)',
+                          color: isCurrent ? info.color : T.sub,
+                          border: `1px solid ${isCurrent ? info.border : T.divider}`,
+                        }}>
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Restart button ── */}
+        <div className="flex justify-end pt-1">
+          <button onClick={onRestart}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-bold transition-all"
+            style={{
+              background: dark ? 'rgba(74,222,128,0.1)' : 'rgba(22,163,74,0.1)',
+              border: dark ? '1px solid rgba(74,222,128,0.25)' : '1px solid rgba(22,163,74,0.3)',
+              color: dark ? '#4ade80' : '#15803d',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = dark ? 'rgba(74,222,128,0.18)' : 'rgba(22,163,74,0.18)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = dark ? 'rgba(74,222,128,0.1)' : 'rgba(22,163,74,0.1)'; }}>
+            <RotateCcw size={13} /> Run Again
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-/* ─────────────────────── Chart tooltip ─────────────────────── */
+/* ══════════════════════════════════════════════
+   CHART TOOLTIP
+══════════════════════════════════════════════ */
 function ChartTip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
@@ -257,27 +476,30 @@ function ChartTip({ active, payload, label }) {
   );
 }
 
-/* ═══════════════════════ Main Component ═══════════════════════ */
-const DEFAULT_DATA = { temperature: 28, humidity: 62, rainfall: 8, soilMoisture: 45 };
-
+/* ══════════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════════ */
 export default function Simulation() {
   const { dark } = useTheme();
 
   /* Simulation state */
-  const [running,  setRunning]  = useState(false);
-  const [tick,     setTick]     = useState(0);
-  const [data,     setData]     = useState(DEFAULT_DATA);
-  const [history,  setHistory]  = useState([]);
-  const [speed,    setSpeed]    = useState(1500);
-  const iRef = useRef(null);
+  const [running,   setRunning]   = useState(false);
+  const [tick,      setTick]      = useState(0);
+  const [done,      setDone]      = useState(false);
+  const [data,      setData]      = useState(DEFAULT_DATA);
+  const [history,   setHistory]   = useState([]);
+  const [speed,     setSpeed]     = useState(1500);
+  const [maxTicks,  setMaxTicks]  = useState(50);
+  const iRef    = useRef(null);
+  const tickRef = useRef(0);         // stable ref for use inside interval
 
   /* Location / weather state */
   const [locOpen,   setLocOpen]   = useState(false);
-  const [location,  setLocation]  = useState(null);   // { city, state, lat, lng }
-  const [liveWx,    setLiveWx]    = useState(null);   // raw weatherService result
+  const [location,  setLocation]  = useState(null);
+  const [liveWx,    setLiveWx]    = useState(null);
   const [wxLoading, setWxLoading] = useState(false);
 
-  /* Simulation tick logic */
+  /* Tick logic */
   const next = useCallback(p => ({
     temperature:  Math.round(Math.max(10, Math.min(50, p.temperature  + (Math.random() - .45) * 3))),
     humidity:     Math.round(Math.max(15, Math.min(98, p.humidity     + (Math.random() - .5)  * 4))),
@@ -288,7 +510,18 @@ export default function Simulation() {
   useEffect(() => {
     if (running) {
       iRef.current = setInterval(() => {
-        setTick(t => t + 1);
+        tickRef.current += 1;
+        const t = tickRef.current;
+        setTick(t);
+
+        /* Auto-stop when maxTicks reached */
+        if (maxTicks !== INF && t >= maxTicks) {
+          clearInterval(iRef.current);
+          setRunning(false);
+          setDone(true);
+          return;
+        }
+
         setData(p => {
           const n = next(p);
           setHistory(h => [...h.slice(-29), {
@@ -300,57 +533,47 @@ export default function Simulation() {
       }, speed);
     }
     return () => clearInterval(iRef.current);
-  }, [running, speed, next]);
+  }, [running, speed, next, maxTicks]);
 
-  const start = () => { setHistory([]); setTick(0); setRunning(true); };
-  const stop  = () => setRunning(false);
+  const start = () => {
+    tickRef.current = 0;
+    setTick(0); setDone(false); setHistory([]); setRunning(true);
+  };
+  const stop = () => { setRunning(false); if (tick > 0) setDone(true); };
   const reset = () => {
-    setRunning(false); setTick(0); setHistory([]);
+    setRunning(false); setDone(false);
+    tickRef.current = 0; setTick(0); setHistory([]);
     setData(liveWx
       ? { temperature: liveWx.temperature, humidity: liveWx.humidity, rainfall: liveWx.rainfall, soilMoisture: liveWx.soilMoisture }
       : DEFAULT_DATA);
   };
 
-  /* Handle location pick from modal */
+  /* Location select */
   const handleLocationSelect = (loc, weather) => {
-    setLocation(loc);
-    setLiveWx(weather);
-    setData({
-      temperature:  weather.temperature,
-      humidity:     weather.humidity,
-      rainfall:     weather.rainfall,
-      soilMoisture: weather.soilMoisture,
-    });
-    setHistory([]);
-    setTick(0);
-    setRunning(false);
-    setLocOpen(false);
-    setWxLoading(false);
+    setLocation(loc); setLiveWx(weather);
+    setData({ temperature: weather.temperature, humidity: weather.humidity, rainfall: weather.rainfall, soilMoisture: weather.soilMoisture });
+    setHistory([]); tickRef.current = 0; setTick(0); setRunning(false); setDone(false); setLocOpen(false);
   };
 
-  /* Refresh weather for same location */
+  /* Refresh weather */
   const handleRefreshWeather = async () => {
     if (!location) return;
     setWxLoading(true);
     try {
       const weather = await fetchWeather(location.lat, location.lng);
       setLiveWx(weather);
-      setData({
-        temperature:  weather.temperature,
-        humidity:     weather.humidity,
-        rainfall:     weather.rainfall,
-        soilMoisture: weather.soilMoisture,
-      });
-      setHistory([]);
-      setTick(0);
-      setRunning(false);
-    } catch (_) { /* silently ignore */ }
+      setData({ temperature: weather.temperature, humidity: weather.humidity, rainfall: weather.rainfall, soilMoisture: weather.soilMoisture });
+      setHistory([]); tickRef.current = 0; setTick(0); setRunning(false); setDone(false);
+    } catch (_) {}
     setWxLoading(false);
   };
 
   const cond = classifyConditions(data);
   const crop = getCrop(data);
   const wx   = liveWx ? decodeWeatherCode(liveWx.weatherCode) : null;
+
+  /* Progress toward maxTicks */
+  const progress = maxTicks === INF ? null : Math.min(100, Math.round((tick / maxTicks) * 100));
 
   const bars = [
     { label: 'Temperature', pct: Math.round(100 - Math.abs(data.temperature - 28) * 2), color: 'bg-orange-400' },
@@ -361,7 +584,7 @@ export default function Simulation() {
   return (
     <div className="space-y-5 fade-in">
 
-      {/* ── Header ── */}
+      {/* ══ HEADER ══ */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Environmental Simulation</h2>
@@ -374,40 +597,47 @@ export default function Simulation() {
 
         <div className="flex flex-wrap items-center gap-2">
 
-          {/* ── Location button ── */}
-          <button
-            onClick={() => setLocOpen(true)}
-            className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl text-[12px] font-semibold transition-all border"
+          {/* Location */}
+          <button onClick={() => setLocOpen(true)}
+            className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl text-[12px] font-semibold transition-all"
             style={{
               background: location ? (dark ? 'rgba(74,222,128,0.1)' : 'rgba(22,163,74,0.08)') : (dark ? '#0a1a0a' : '#f0fdf0'),
-              border:     location ? `1px solid ${dark ? 'rgba(74,222,128,0.3)' : 'rgba(22,163,74,0.35)'}` : (dark ? '1px solid rgba(74,222,128,0.15)' : '1px solid rgba(34,139,34,0.2)'),
+              border:     location ? `1px solid ${dark ? 'rgba(74,222,128,0.3)' : 'rgba(22,163,74,0.35)'}` : `1px solid ${dark ? 'rgba(74,222,128,0.15)' : 'rgba(34,139,34,0.2)'}`,
               color:      dark ? (location ? '#4ade80' : 'rgba(180,210,180,0.7)') : (location ? '#15803d' : 'rgba(15,47,15,0.6)'),
             }}
             onMouseEnter={e => { e.currentTarget.style.background = dark ? 'rgba(74,222,128,0.14)' : 'rgba(22,163,74,0.12)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = location ? (dark ? 'rgba(74,222,128,0.1)' : 'rgba(22,163,74,0.08)') : (dark ? '#0a1a0a' : '#f0fdf0'); }}>
             <MapPin size={13} />
-            {location ? `${location.city}` : 'Select Location'}
+            {location ? location.city : 'Select Location'}
           </button>
 
-          {/* Refresh weather — only shown when a location is selected */}
+          {/* Refresh */}
           {location && (
-            <button
-              onClick={handleRefreshWeather}
-              disabled={wxLoading}
-              title="Refresh live weather"
-              className="flex items-center justify-center h-9 w-9 rounded-xl border transition-all"
+            <button onClick={handleRefreshWeather} disabled={wxLoading} title="Refresh live weather"
+              className="flex items-center justify-center h-9 w-9 rounded-xl transition-all"
               style={{
                 background: dark ? '#0a1a0a' : '#f0fdf0',
-                border: dark ? '1px solid rgba(74,222,128,0.15)' : '1px solid rgba(34,139,34,0.2)',
+                border: `1px solid ${dark ? 'rgba(74,222,128,0.15)' : 'rgba(34,139,34,0.2)'}`,
                 color: dark ? 'rgba(74,222,128,0.5)' : 'rgba(22,101,52,0.6)',
               }}
               onMouseEnter={e => { e.currentTarget.style.background = dark ? 'rgba(74,222,128,0.08)' : 'rgba(22,163,74,0.1)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = dark ? '#0a1a0a' : '#f0fdf0'; }}>
-              {wxLoading
-                ? <Loader2 size={13} className="animate-spin" />
-                : <Activity size={13} />}
+              {wxLoading ? <Loader2 size={13} className="animate-spin" /> : <Activity size={13} />}
             </button>
           )}
+
+          {/* Max Ticks */}
+          <div className="flex items-center gap-2 h-9 px-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-[12px]">
+            <BarChart3 size={12} className="text-zinc-400 flex-shrink-0" />
+            <span className="text-zinc-500 font-semibold">Ticks</span>
+            <select value={maxTicks} onChange={e => setMaxTicks(Number(e.target.value))}
+              className="bg-transparent text-zinc-800 dark:text-zinc-200 outline-none cursor-pointer font-semibold text-[12px]"
+              disabled={running}>
+              {MAX_TICK_OPTIONS.map(o => (
+                <option key={o.value} value={o.value} className="bg-white dark:bg-zinc-900">{o.label}</option>
+              ))}
+            </select>
+          </div>
 
           {/* Speed */}
           <div className="flex items-center gap-2 h-9 px-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-[12px]">
@@ -425,7 +655,7 @@ export default function Simulation() {
             ? <button onClick={start} className="flex items-center gap-1.5 px-4 h-9 rounded-xl font-bold text-white text-[12px] bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 transition-all shadow-glow-sm">
                 <Play size={14} /> Start
               </button>
-            : <button onClick={stop}  className="flex items-center gap-1.5 px-4 h-9 rounded-xl font-bold text-white text-[12px] bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 transition-all">
+            : <button onClick={stop} className="flex items-center gap-1.5 px-4 h-9 rounded-xl font-bold text-white text-[12px] bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 transition-all">
                 <Square size={14} /> Stop
               </button>
           }
@@ -435,7 +665,7 @@ export default function Simulation() {
         </div>
       </div>
 
-      {/* ── Live weather badge (shown after location pick) ── */}
+      {/* ══ LIVE WEATHER BADGE ══ */}
       {liveWx && location && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl px-4 py-3 border text-[12px]"
           style={{
@@ -459,37 +689,56 @@ export default function Simulation() {
         </div>
       )}
 
-      {/* ── Status strip ── */}
-      <div className={`rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 border text-[12px] transition-all ${
+      {/* ══ STATUS + PROGRESS ══ */}
+      <div className={`rounded-xl px-4 py-2.5 border text-[12px] transition-all ${
         running ? 'bg-green-50 dark:bg-green-500/[0.06] border-green-100 dark:border-green-500/15'
-                : 'bg-zinc-50 dark:bg-zinc-900/40 border-zinc-100 dark:border-zinc-800'
+        : done   ? 'bg-emerald-50 dark:bg-emerald-500/[0.06] border-emerald-100 dark:border-emerald-500/20'
+                 : 'bg-zinc-50 dark:bg-zinc-900/40 border-zinc-100 dark:border-zinc-800'
       }`}>
-        <div className="flex items-center gap-2">
-          {running
-            ? <Activity size={14} className="text-green-500 animate-pulse" />
-            : <div className="w-2 h-2 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-          }
-          <span className={`font-medium ${running ? 'text-green-700 dark:text-green-400' : 'text-zinc-500'}`}>
-            {running ? `Running · Tick #${tick}` : 'Stopped · Press Start to begin'}
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {location && (
-            <span className="text-[10px] px-2 py-0.5 rounded-md font-bold capitalize bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 flex items-center gap-1">
-              <MapPin size={9} /> {location.city}
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            {running
+              ? <Activity size={14} className="text-green-500 animate-pulse" />
+              : done
+                ? <CheckCircle2 size={14} className="text-emerald-500" />
+                : <div className="w-2 h-2 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+            }
+            <span className={`font-medium ${
+              running ? 'text-green-700 dark:text-green-400'
+              : done   ? 'text-emerald-700 dark:text-emerald-400'
+                       : 'text-zinc-500'
+            }`}>
+              {running ? `Running · Tick ${tick} / ${maxTicks === INF ? '∞' : maxTicks}`
+               : done   ? `Complete · ${tick} ticks recorded`
+                        : 'Stopped · Press Start to begin'}
             </span>
-          )}
-          {[
-            { v: cond.soilType, c: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'   },
-            { v: cond.weather,  c: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400' },
-            { v: cond.season,   c: 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400' },
-          ].map(b => (
-            <span key={b.v} className={`text-[10px] px-2 py-0.5 rounded-md font-bold capitalize ${b.c}`}>{b.v}</span>
-          ))}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {location && (
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 flex items-center gap-1">
+                <MapPin size={9} /> {location.city}
+              </span>
+            )}
+            {[
+              { v: cond.soilType, c: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'   },
+              { v: cond.weather,  c: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+              { v: cond.season,   c: 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400' },
+            ].map(b => (
+              <span key={b.v} className={`text-[10px] px-2 py-0.5 rounded-md font-bold capitalize ${b.c}`}>{b.v}</span>
+            ))}
+          </div>
         </div>
+
+        {/* Progress bar (only when maxTicks is finite) */}
+        {progress !== null && (
+          <div className="h-1 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-700">
+            <div className={`h-full rounded-full transition-all duration-500 ${done ? 'bg-emerald-500' : 'bg-green-500'}`}
+              style={{ width: `${progress}%` }} />
+          </div>
+        )}
       </div>
 
-      {/* ── Gauges ── */}
+      {/* ══ GAUGES ══ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Gauge value={data.temperature}  max={50}  label="Temperature"   unit="°C" hexColor="#f97316" icon={Thermometer} />
         <Gauge value={data.humidity}     max={100} label="Humidity"      unit="%"  hexColor="#3b82f6" icon={Droplets}    />
@@ -497,13 +746,13 @@ export default function Simulation() {
         <Gauge value={data.soilMoisture} max={90}  label="Soil Moisture" unit="%"  hexColor="#22c55e" icon={Leaf}        />
       </div>
 
-      {/* ── Live trend chart ── */}
+      {/* ══ LIVE TREND CHART ══ */}
       {history.length > 1 && (
         <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
             <p className="text-[13px] font-bold text-zinc-900 dark:text-zinc-100">Live Trend</p>
             <span className="flex items-center gap-1.5 text-[11px] text-green-600 dark:text-green-400 font-bold">
-              <Activity size={11} className="animate-pulse" /> Real-time
+              {running ? <><Activity size={11} className="animate-pulse" /> Real-time</> : `${history.length} points`}
             </span>
           </div>
           <ResponsiveContainer width="100%" height={200}>
@@ -512,14 +761,14 @@ export default function Simulation() {
               <XAxis dataKey="time" tick={{ fontSize: 10, fill: dark ? '#71717a' : '#a1a1aa' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 10, fill: dark ? '#71717a' : '#a1a1aa' }} axisLine={false} tickLine={false} />
               <Tooltip content={<ChartTip />} />
-              <Line type="monotone" dataKey="temperature"  stroke="#f97316" strokeWidth={1.5} dot={false} name="Temp °C"    />
-              <Line type="monotone" dataKey="humidity"     stroke="#3b82f6" strokeWidth={1.5} dot={false} name="Humidity %"  />
-              <Line type="monotone" dataKey="rainfall"     stroke="#06b6d4" strokeWidth={1.5} dot={false} name="Rain mm"     />
-              <Line type="monotone" dataKey="soilMoisture" stroke="#22c55e" strokeWidth={1.5} dot={false} name="Soil %"      />
+              <Line type="monotone" dataKey="temperature"  stroke="#f97316" strokeWidth={1.5} dot={false} name="Temp °C"   />
+              <Line type="monotone" dataKey="humidity"     stroke="#3b82f6" strokeWidth={1.5} dot={false} name="Humidity %" />
+              <Line type="monotone" dataKey="rainfall"     stroke="#06b6d4" strokeWidth={1.5} dot={false} name="Rain mm"    />
+              <Line type="monotone" dataKey="soilMoisture" stroke="#22c55e" strokeWidth={1.5} dot={false} name="Soil %"     />
             </LineChart>
           </ResponsiveContainer>
           <div className="flex flex-wrap gap-3 mt-2 justify-center">
-            {[['Temp', '#f97316'], ['Humidity', '#3b82f6'], ['Rainfall', '#06b6d4'], ['Soil', '#22c55e']].map(([l, c]) => (
+            {[['Temp','#f97316'],['Humidity','#3b82f6'],['Rainfall','#06b6d4'],['Soil','#22c55e']].map(([l,c])=>(
               <span key={l} className="flex items-center gap-1 text-[10px] text-zinc-500 font-medium">
                 <span className="w-4 h-0.5 inline-block rounded-full" style={{ background: c }} />{l}
               </span>
@@ -528,51 +777,61 @@ export default function Simulation() {
         </div>
       )}
 
-      {/* ── Suitability cards ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          { label: 'Current Conditions', value: `${cond.weather} · ${cond.soilType} soil`, highlight: false },
-          { label: 'Detected Season',    value: cond.season,                                highlight: false },
-          { label: 'Recommended Crop',   value: crop,                                       highlight: true  },
-        ].map(item => (
-          <div key={item.label} className={`rounded-2xl border p-4 ${
-            item.highlight
-              ? 'bg-gradient-to-br from-green-600 to-emerald-700 border-transparent text-white shadow-glow-sm'
-              : 'bg-white dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800'
-          }`}>
-            <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${item.highlight ? 'text-green-200' : 'text-zinc-500'}`}>{item.label}</p>
-            <p className={`font-bold capitalize text-base ${item.highlight ? 'text-white' : 'text-zinc-900 dark:text-zinc-100'}`}>{item.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Suitability bars ── */}
-      <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
-        <p className="text-[13px] font-bold text-zinc-900 dark:text-zinc-100 mb-4">Suitability Analysis</p>
-        <div className="space-y-4">
-          {bars.map(b => {
-            const pct = Math.max(0, Math.min(100, b.pct));
-            return (
-              <div key={b.label}>
-                <div className="flex justify-between text-[12px] font-semibold mb-1.5">
-                  <span className="text-zinc-600 dark:text-zinc-400">{b.label}</span>
-                  <span className="text-zinc-900 dark:text-zinc-100">{pct}%</span>
-                </div>
-                <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                  <div className={`h-full ${b.color} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Location Picker Modal ── */}
-      {locOpen && (
-        <LocationPicker
-          onSelect={handleLocationSelect}
-          onClose={() => setLocOpen(false)}
+      {/* ══ SIMULATION RESULT — shown when done ══ */}
+      {done && history.length > 0 && (
+        <SimulationResult
+          history={history}
+          location={location}
+          liveWx={liveWx}
+          onRestart={reset}
         />
+      )}
+
+      {/* ══ LIVE SUITABILITY CARDS (shown while running or before start) ══ */}
+      {!done && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { label: 'Current Conditions', value: `${cond.weather} · ${cond.soilType} soil`, highlight: false },
+              { label: 'Detected Season',    value: cond.season,                                highlight: false },
+              { label: 'Recommended Crop',   value: crop,                                       highlight: true  },
+            ].map(item => (
+              <div key={item.label} className={`rounded-2xl border p-4 ${
+                item.highlight
+                  ? 'bg-gradient-to-br from-green-600 to-emerald-700 border-transparent text-white shadow-glow-sm'
+                  : 'bg-white dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800'
+              }`}>
+                <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${item.highlight ? 'text-green-200' : 'text-zinc-500'}`}>{item.label}</p>
+                <p className={`font-bold capitalize text-base ${item.highlight ? 'text-white' : 'text-zinc-900 dark:text-zinc-100'}`}>{item.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5">
+            <p className="text-[13px] font-bold text-zinc-900 dark:text-zinc-100 mb-4">Suitability Analysis</p>
+            <div className="space-y-4">
+              {bars.map(b => {
+                const pct = Math.max(0, Math.min(100, b.pct));
+                return (
+                  <div key={b.label}>
+                    <div className="flex justify-between text-[12px] font-semibold mb-1.5">
+                      <span className="text-zinc-600 dark:text-zinc-400">{b.label}</span>
+                      <span className="text-zinc-900 dark:text-zinc-100">{pct}%</span>
+                    </div>
+                    <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                      <div className={`h-full ${b.color} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ══ LOCATION PICKER MODAL ══ */}
+      {locOpen && (
+        <LocationPicker onSelect={handleLocationSelect} onClose={() => setLocOpen(false)} />
       )}
     </div>
   );
