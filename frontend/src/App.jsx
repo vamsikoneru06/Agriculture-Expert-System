@@ -15,6 +15,7 @@ const MLPrediction = React.lazy(() => import('./pages/MLPrediction'));
 const AdminPanel   = React.lazy(() => import('./pages/AdminPanel'));
 const History      = React.lazy(() => import('./pages/History'));
 const Chatbot      = React.lazy(() => import('./pages/Chatbot'));
+const Game         = React.lazy(() => import('./pages/Game'));
 
 function AppLayout() {
   return (
@@ -59,6 +60,7 @@ export default function App() {
                 <Route path="/ml"         element={<MLPrediction />} />
                 <Route path="/history"    element={<History />} />
                 <Route path="/chatbot"    element={<Chatbot />} />
+                <Route path="/game"       element={<Game />} />
                 <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminPanel /></ProtectedRoute>} />
               </Route>
               <Route path="*" element={<Navigate to="/dashboard" replace />} />

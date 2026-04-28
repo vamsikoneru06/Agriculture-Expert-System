@@ -12,6 +12,7 @@ const PAGE_META = {
   '/history':    { label: 'History',       emoji: '📋' },
   '/admin':      { label: 'Admin',         emoji: '⚙️' },
   '/chatbot':    { label: 'AI Chatbot',    emoji: '💬' },
+  '/game':       { label: 'Crop Game',     emoji: '🎮' },
 };
 
 const NOTES = [

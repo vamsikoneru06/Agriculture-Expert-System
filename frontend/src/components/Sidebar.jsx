@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import {
   LayoutDashboard, Leaf, Thermometer, BrainCircuit,
   History, ShieldCheck, MessageSquare, LogOut,
-  ChevronLeft, ChevronRight, Sun, Moon, Sprout,
+  ChevronLeft, ChevronRight, Sun, Moon, Sprout, Gamepad2,
 } from 'lucide-react';
 
 const NAV = [
@@ -16,6 +16,7 @@ const NAV = [
   { to: '/history',    icon: History,         label: 'History',       roles: ['admin','farmer','student'], color: '#1d4ed8', dimDark: 'rgba(96,165,250,0.12)',  dimLight: 'rgba(29,78,216,0.1)'  },
   { to: '/admin',      icon: ShieldCheck,     label: 'Admin Panel',   roles: ['admin'],                    color: '#be123c', dimDark: 'rgba(251,113,133,0.12)', dimLight: 'rgba(190,18,60,0.1)'  },
   { to: '/chatbot',    icon: MessageSquare,   label: 'AI Chatbot',    roles: ['admin','farmer','student'], color: '#0e7490', dimDark: 'rgba(34,211,238,0.12)',  dimLight: 'rgba(14,116,144,0.1)' },
+  { to: '/game',       icon: Gamepad2,        label: 'Crop Game',     roles: ['admin','farmer','student'], color: '#db2777', dimDark: 'rgba(244,114,182,0.12)', dimLight: 'rgba(219,39,119,0.08)' },
 ];
 
 export default function Sidebar() {
