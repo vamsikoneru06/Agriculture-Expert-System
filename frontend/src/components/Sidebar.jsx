@@ -89,11 +89,10 @@ export default function Sidebar() {
           style={{ background: T.userCard, border: `1px solid ${T.userCardBdr}` }}>
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold flex-shrink-0"
             style={{ background: T.userAvBg, border: `1px solid ${T.userAvBdr}`, color: T.userAvColor }}>
-            {user?.name?.charAt(0).toUpperCase()}
+            {user?.role?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-semibold truncate leading-tight" style={{ color: T.userName }}>{user?.name}</p>
-            <span className="text-[9px] px-1.5 py-0.5 rounded font-data font-medium capitalize"
+            <span className="text-[11px] px-1.5 py-0.5 rounded font-data font-medium capitalize"
               style={{ background: T.userAvBg, color: T.userAvColor, border: `1px solid ${T.userAvBdr}` }}>
               {user?.role}
             </span>
@@ -103,8 +102,8 @@ export default function Sidebar() {
         <div className="flex justify-center mt-3 mb-1 flex-shrink-0">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold"
             style={{ background: T.userAvBg, border: `1px solid ${T.userAvBdr}`, color: T.userAvColor }}
-            title={user?.name}>
-            {user?.name?.charAt(0).toUpperCase()}
+            title={user?.role}>
+            {user?.role?.charAt(0).toUpperCase() || 'U'}
           </div>
         </div>
       )}

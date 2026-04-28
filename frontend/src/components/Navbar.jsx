@@ -134,10 +134,10 @@ export default function Navbar() {
           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
           <div className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold flex-shrink-0"
             style={{ background: T.userAvBg, border: `1px solid ${T.userAvBdr}`, color: T.userAvColor }}>
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
+            {user?.role?.charAt(0).toUpperCase() || 'U'}
           </div>
-          <p className="hidden sm:block text-[12px] font-semibold leading-tight truncate max-w-[80px]"
-            style={{ color: T.userName }}>{user?.name}</p>
+          <p className="hidden sm:block text-[12px] font-semibold leading-tight truncate max-w-[80px] capitalize"
+            style={{ color: T.userName }}>{user?.role}</p>
           <ChevronDown size={11} className="hidden sm:block flex-shrink-0" style={{ color: T.iconColor }} />
         </button>
       </div>
