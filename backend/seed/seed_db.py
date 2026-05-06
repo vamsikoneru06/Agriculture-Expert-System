@@ -63,11 +63,16 @@ def seed_all():
 
     # ── 2. Expert rules ───────────────────────────────────────────────────────
     print("\n[2/4] Seeding expert rules ...")
-    if db.rules.count_documents({}) == 0:
-        db.rules.insert_many(EXPERT_RULES)
-        print(f"   [OK] Inserted {len(EXPERT_RULES)} expert rules")
+    existing = db.rules.count_documents({})
+    if existing < len(EXPERT_RULES):
+        for rule in EXPERT_RULES:
+            db.rules.update_one(
+                {"rule_id": rule["rule_id"]},
+                {"$set": rule},
+                upsert=True,
+            )
+        print(f"   [OK] Upserted {len(EXPERT_RULES)} rules (was {existing})")
     else:
-        existing = db.rules.count_documents({})
         print(f"   [SKIPPED] {existing} rules already exist")
 
     # ── 3. Crop catalogue ─────────────────────────────────────────────────────
