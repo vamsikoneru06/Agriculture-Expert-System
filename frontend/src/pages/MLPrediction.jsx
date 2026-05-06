@@ -4,49 +4,90 @@ import { useTheme } from '../context/ThemeContext';
 import { BrainCircuit, CheckCircle2, TrendingUp } from 'lucide-react';
 import { GlassButton } from '../components/ui/glass-button';
 
+const TYPICAL_HI = {
+  wheat:5.0, rice:6.5, maize:7.5, cotton:3.2, soybean:2.5, potato:28.0,
+  sugarcane:90.0, tomato:45.0, onion:25.0, banana:50.0, groundnut:2.8,
+  sunflower:2.5, chickpea:2.0, barley:4.5, mustard:2.2, lentil:1.7,
+  bajra:3.0, sorghum:4.0, moong:1.5, jute:3.5, watermelon:42.0,
+  cucumber:28.0, muskmelon:27.0, okra:16.0, bitter_gourd:15.0,
+  bottle_gourd:40.0, cowpea:1.8, sesame:1.2, oats:4.2, pumpkin:42.0, taro:34.0,
+};
+
 function predictYield(inputs) {
   const { cropType, soilPH, nitrogen, phosphorus, potassium, temperature, rainfall, farmArea } = inputs;
-  const bases = { wheat:4.2, rice:5.5, maize:6.1, cotton:2.8, soybean:2.5, potato:25.0, sugarcane:78.0, tomato:32.0, onion:20.0, banana:42.0, groundnut:2.1, sunflower:2.0 };
-  const base  = bases[cropType] || 3.0;
-  const ph    = 1 - Math.abs(soilPH - 6.5) * 0.1;
-  const nut   = Math.min(1.3, (Number(nitrogen)+Number(phosphorus)+Number(potassium))/300);
-  const cli   = temperature>15&&temperature<38 ? 1.1 : 0.85;
-  const rain  = rainfall>400&&rainfall<1600 ? 1.05 : 0.9;
-  const y     = base * ph * nut * cli * rain;
+  const bases = {
+    wheat:4.2, rice:5.5, maize:6.1, cotton:2.8, soybean:2.5, potato:25.0,
+    sugarcane:78.0, tomato:32.0, onion:20.0, banana:42.0, groundnut:2.1,
+    sunflower:2.0, chickpea:1.5, barley:3.5, mustard:1.7, lentil:1.2,
+    bajra:2.0, sorghum:3.0, moong:1.1, jute:2.8, watermelon:32.0,
+    cucumber:21.0, muskmelon:20.0, okra:12.0, bitter_gourd:11.0,
+    bottle_gourd:30.0, cowpea:1.3, sesame:0.9, oats:3.2, pumpkin:31.0, taro:26.0,
+  };
+  const base = bases[cropType] || 3.0;
+  const ph   = 1 - Math.abs(soilPH - 6.5) * 0.1;
+  const nut  = Math.min(1.3, (Number(nitrogen)+Number(phosphorus)+Number(potassium))/300);
+  const cli  = temperature>15&&temperature<38 ? 1.1 : 0.85;
+  const rain = rainfall>400&&rainfall<1600 ? 1.05 : 0.9;
+  const y    = base * ph * nut * cli * rain;
+
+  const hi    = TYPICAL_HI[cropType] || 5.0;
+  const ratio = y / hi;
+  const grade      = ratio>=0.9?'Excellent':ratio>=0.7?'Good':ratio>=0.5?'Average':'Below Average';
+  const gradeColor = ratio>=0.9?'text-green-500':ratio>=0.7?'text-blue-500':ratio>=0.5?'text-amber-500':'text-rose-500';
+
   return {
     yieldPerHectare: y.toFixed(2),
     totalYield:      (y*farmArea).toFixed(2),
     confidence:      Math.min(96,Math.max(72,Math.round(85+ph*5+nut*5))),
-    grade:      y>5?'Excellent':y>3.5?'Good':y>2?'Average':'Below Average',
-    gradeColor: y>5?'text-green-500':y>3.5?'text-blue-500':y>2?'text-amber-500':'text-rose-500',
+    grade,
+    gradeColor,
     featureImportance:[
-      { feature:'Soil pH',     importance:Math.round(ph*30)   },
-      { feature:'Nitrogen',    importance:Math.round(nitrogen/5)     },
-      { feature:'Phosphorus',  importance:Math.round(phosphorus/6)   },
-      { feature:'Potassium',   importance:Math.round(potassium/7)    },
-      { feature:'Temperature', importance:Math.round(cli*22)  },
-      { feature:'Rainfall',    importance:Math.round(rain*18) },
+      { feature:'Soil pH',     importance:Math.round(ph*30)         },
+      { feature:'Nitrogen',    importance:Math.round(nitrogen/5)    },
+      { feature:'Phosphorus',  importance:Math.round(phosphorus/6)  },
+      { feature:'Potassium',   importance:Math.round(potassium/7)   },
+      { feature:'Temperature', importance:Math.round(cli*22)        },
+      { feature:'Rainfall',    importance:Math.round(rain*18)       },
     ],
   };
 }
 
 const CROPS = [
-  {value:'wheat',    label:'Wheat',     emoji:'🌿', opt:'3–5 t/ha'    },
-  {value:'rice',     label:'Rice',      emoji:'🍚', opt:'4–6 t/ha'    },
-  {value:'maize',    label:'Maize',     emoji:'🌽', opt:'5–8 t/ha'    },
-  {value:'cotton',   label:'Cotton',    emoji:'🌸', opt:'2–3 t/ha'    },
-  {value:'soybean',  label:'Soybean',   emoji:'🫘', opt:'1.5–2.5 t/ha'},
-  {value:'potato',   label:'Potato',    emoji:'🥔', opt:'20–30 t/ha'  },
-  {value:'sugarcane',label:'Sugarcane', emoji:'🎋', opt:'65–90 t/ha'  },
-  {value:'tomato',   label:'Tomato',    emoji:'🍅', opt:'25–45 t/ha'  },
-  {value:'onion',    label:'Onion',     emoji:'🧅', opt:'15–25 t/ha'  },
-  {value:'banana',   label:'Banana',    emoji:'🍌', opt:'30–50 t/ha'  },
-  {value:'groundnut',label:'Groundnut', emoji:'🥜', opt:'1.5–2.8 t/ha'},
-  {value:'sunflower',label:'Sunflower', emoji:'🌻', opt:'1.5–2.5 t/ha'},
+  {value:'wheat',        label:'Wheat',        emoji:'🌿', opt:'3–5 t/ha'     },
+  {value:'rice',         label:'Rice',          emoji:'🍚', opt:'4–6 t/ha'     },
+  {value:'maize',        label:'Maize',         emoji:'🌽', opt:'5–8 t/ha'     },
+  {value:'cotton',       label:'Cotton',        emoji:'🌸', opt:'2–3 t/ha'     },
+  {value:'soybean',      label:'Soybean',       emoji:'🫘', opt:'1.5–2.5 t/ha' },
+  {value:'potato',       label:'Potato',        emoji:'🥔', opt:'20–30 t/ha'   },
+  {value:'sugarcane',    label:'Sugarcane',     emoji:'🎋', opt:'65–90 t/ha'   },
+  {value:'tomato',       label:'Tomato',        emoji:'🍅', opt:'25–45 t/ha'   },
+  {value:'onion',        label:'Onion',         emoji:'🧅', opt:'15–25 t/ha'   },
+  {value:'banana',       label:'Banana',        emoji:'🍌', opt:'30–50 t/ha'   },
+  {value:'groundnut',    label:'Groundnut',     emoji:'🥜', opt:'1.5–2.8 t/ha' },
+  {value:'sunflower',    label:'Sunflower',     emoji:'🌻', opt:'1.5–2.5 t/ha' },
+  {value:'chickpea',     label:'Chickpea',      emoji:'🫘', opt:'1–2 t/ha'     },
+  {value:'barley',       label:'Barley',        emoji:'🌾', opt:'2.5–4.5 t/ha' },
+  {value:'mustard',      label:'Mustard',       emoji:'🌼', opt:'1.2–2.2 t/ha' },
+  {value:'lentil',       label:'Lentil',        emoji:'🫘', opt:'0.8–1.7 t/ha' },
+  {value:'bajra',        label:'Pearl Millet',  emoji:'🌾', opt:'1.5–3 t/ha'   },
+  {value:'sorghum',      label:'Sorghum',       emoji:'🌾', opt:'2–4 t/ha'     },
+  {value:'moong',        label:'Green Gram',    emoji:'🫘', opt:'0.8–1.5 t/ha' },
+  {value:'jute',         label:'Jute',          emoji:'🌿', opt:'2–3.5 t/ha'   },
+  {value:'watermelon',   label:'Watermelon',    emoji:'🍉', opt:'22–42 t/ha'   },
+  {value:'cucumber',     label:'Cucumber',      emoji:'🥒', opt:'14–28 t/ha'   },
+  {value:'muskmelon',    label:'Muskmelon',     emoji:'🍈', opt:'14–27 t/ha'   },
+  {value:'okra',         label:'Okra',          emoji:'🌿', opt:'8–16 t/ha'    },
+  {value:'bitter_gourd', label:'Bitter Gourd',  emoji:'🥒', opt:'7–15 t/ha'    },
+  {value:'bottle_gourd', label:'Bottle Gourd',  emoji:'🥬', opt:'20–40 t/ha'   },
+  {value:'cowpea',       label:'Cowpea',        emoji:'🫘', opt:'0.8–1.8 t/ha' },
+  {value:'sesame',       label:'Sesame',        emoji:'🌿', opt:'0.6–1.2 t/ha' },
+  {value:'oats',         label:'Oats',          emoji:'🌾', opt:'2–4.2 t/ha'   },
+  {value:'pumpkin',      label:'Pumpkin',       emoji:'🎃', opt:'20–42 t/ha'   },
+  {value:'taro',         label:'Taro',          emoji:'🌿', opt:'18–34 t/ha'   },
 ];
 
 const DEF  = { cropType:'wheat', soilPH:6.5, nitrogen:120, phosphorus:60, potassium:80, temperature:25, rainfall:800, farmArea:1 };
-const BARS  = ['#22c55e','#3b82f6','#8b5cf6','#f97316','#06b6d4','#eab308'];
+const BARS = ['#22c55e','#3b82f6','#8b5cf6','#f97316','#06b6d4','#eab308'];
 
 function Slider({ label, name, value, min, max, step=1, unit, onChange, color='#22c55e' }) {
   const pct = ((value-min)/(max-min))*100;
@@ -109,16 +150,16 @@ export default function MLPrediction() {
     <div className="space-y-5 fade-in">
       <div>
         <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Machine Learning Prediction</h2>
-        <p className="text-[12px] text-zinc-500 mt-0.5">Decision-Tree model · Soil nutrients & climate inputs</p>
+        <p className="text-[12px] text-zinc-500 mt-0.5">Decision-Tree model · Soil nutrients &amp; climate inputs</p>
       </div>
 
       {/* Model badge */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 bg-violet-50 dark:bg-violet-500/[0.06] border border-violet-100 dark:border-violet-500/15 rounded-xl text-[12px]">
         <span className="text-violet-700 dark:text-violet-300 font-medium"><span className="font-bold">Model:</span> Decision Tree Regressor</span>
         <span className="text-violet-300 dark:text-violet-700 hidden sm:block">·</span>
-        <span className="text-violet-700 dark:text-violet-300 font-medium"><span className="font-bold">Dataset:</span> 2,200 samples</span>
+        <span className="text-violet-700 dark:text-violet-300 font-medium"><span className="font-bold">Dataset:</span> 632 samples · 31 crops</span>
         <span className="text-violet-300 dark:text-violet-700 hidden sm:block">·</span>
-        <span className="text-violet-700 dark:text-violet-300 font-medium">Train <span className="font-bold">91.2%</span> · Test <span className="font-bold">88.7%</span></span>
+        <span className="text-violet-700 dark:text-violet-300 font-medium">Train <span className="font-bold">98.9%</span> · Test <span className="font-bold">78.3%</span></span>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -132,21 +173,23 @@ export default function MLPrediction() {
             <h3 className="text-[13px] font-bold text-zinc-900 dark:text-zinc-100">Model Input Features</h3>
           </div>
 
-          {/* Crop grid */}
+          {/* Crop grid — scrollable */}
           <div>
             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Select Crop</p>
-            <div className="grid grid-cols-4 gap-1.5">
-              {CROPS.map(c => (
-                <button key={c.value} onClick={()=>setInputs(f=>({...f,cropType:c.value}))}
-                  className={`p-2 rounded-xl border-2 text-center transition-all duration-150 ${
-                    inputs.cropType===c.value
-                      ? 'border-violet-400 dark:border-violet-500/60 bg-violet-50 dark:bg-violet-500/10'
-                      : 'border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 hover:border-zinc-200 dark:hover:border-zinc-700'
-                  }`}>
-                  <div className="text-base">{c.emoji}</div>
-                  <div className={`text-[10px] font-bold mt-0.5 truncate ${inputs.cropType===c.value?'text-violet-700 dark:text-violet-300':'text-zinc-600 dark:text-zinc-400'}`}>{c.label}</div>
-                </button>
-              ))}
+            <div className="max-h-[260px] overflow-y-auto rounded-xl pr-0.5">
+              <div className="grid grid-cols-5 gap-1.5">
+                {CROPS.map(c => (
+                  <button key={c.value} onClick={()=>setInputs(f=>({...f,cropType:c.value}))}
+                    className={`p-1.5 rounded-xl border-2 text-center transition-all duration-150 ${
+                      inputs.cropType===c.value
+                        ? 'border-violet-400 dark:border-violet-500/60 bg-violet-50 dark:bg-violet-500/10'
+                        : 'border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 hover:border-zinc-200 dark:hover:border-zinc-700'
+                    }`}>
+                    <div className="text-base leading-none">{c.emoji}</div>
+                    <div className={`text-[9px] font-bold mt-0.5 truncate ${inputs.cropType===c.value?'text-violet-700 dark:text-violet-300':'text-zinc-600 dark:text-zinc-400'}`}>{c.label}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

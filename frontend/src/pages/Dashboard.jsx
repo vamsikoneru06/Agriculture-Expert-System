@@ -46,10 +46,10 @@ const recent = [
 ];
 
 const STATS = [
-  { label:'Total Predictions', value:'1,247', sub:'+18% this week',  icon:Sprout,       color:'#4ade80' },
-  { label:'ML Predictions',    value:'342',   sub:'+7% this week',   icon:BrainCircuit, color:'#a78bfa' },
-  { label:'Expert Rules',      value:'25',    sub:'Knowledge base',  icon:BookOpen,     color:'#fbbf24' },
-  { label:'Model Accuracy',    value:'91.2%', sub:'+2.1% improved',  icon:BarChart3,    color:'#60a5fa' },
+  { label:'Total Predictions', value:'1,247', sub:'+18% this week',   icon:Sprout,       color:'#4ade80' },
+  { label:'ML Predictions',    value:'342',   sub:'+7% this week',    icon:BrainCircuit, color:'#a78bfa' },
+  { label:'Expert Rules',      value:'75',    sub:'5 soils · 5 weathers', icon:BookOpen, color:'#fbbf24' },
+  { label:'Train Accuracy',    value:'98.9%', sub:'Test R² 78.3%',    icon:BarChart3,    color:'#60a5fa' },
 ];
 
 /* ── Card wrapper ── */

@@ -6,26 +6,89 @@ import {
 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════
-   DATA
+   DATA — derived from all 75 expert rules
+   5 soils × 5 weathers × 3 seasons
 ═══════════════════════════════════════════════ */
-const CROP_MAP = {
-  rainy: { kharif: 'Rice / Jute',  rabi: 'Barley',   zaid: 'Cucumber'   },
-  humid: { kharif: 'Rice',         rabi: 'Mustard',  zaid: 'Brinjal'    },
-  hot:   { kharif: 'Cotton',       rabi: 'Wheat',    zaid: 'Tomato'     },
-  dry:   { kharif: 'Pearl Millet', rabi: 'Wheat',    zaid: 'Sunflower'  },
-  cool:  { kharif: 'Maize',        rabi: 'Potato',   zaid: 'Watermelon' },
+const SOIL_CROP_MAP = {
+  sandy: {
+    hot:   { kharif:'Pearl Millet (Bajra)', rabi:'Chickpea (Gram)',    zaid:'Muskmelon (Kharbooja)' },
+    dry:   { kharif:'Pearl Millet (Bajra)', rabi:'Wheat',              zaid:'Sesame (Til)'           },
+    humid: { kharif:'Cowpea (Lobia)',       rabi:'Onion',              zaid:'Bitter Gourd (Karela)'  },
+    rainy: { kharif:'Groundnut (Peanut)',   rabi:'Mustard (Rapeseed)', zaid:'Green Gram (Moong)'     },
+    cool:  { kharif:'Maize (Corn)',         rabi:'Barley',             zaid:'Watermelon'              },
+  },
+  clay: {
+    hot:   { kharif:'Rice (Heat-Tolerant)', rabi:'Chickpea (Gram)',         zaid:'Brinjal (Eggplant)'      },
+    dry:   { kharif:'Sorghum (Jowar)',      rabi:'Barley',                  zaid:'Bitter Gourd (Karela)'   },
+    humid: { kharif:'Rice (Paddy)',         rabi:'Mustard (Rapeseed)',       zaid:'Taro (Arbi / Colocasia)' },
+    rainy: { kharif:'Rice (Paddy)',         rabi:'Oats',                    zaid:'Pumpkin (Kaddu)'          },
+    cool:  { kharif:'Maize (Corn)',         rabi:'Wheat',                   zaid:'Cucumber'                 },
+  },
+  loamy: {
+    hot:   { kharif:'Cotton',               rabi:'Barley',              zaid:'Tomato'                },
+    dry:   { kharif:'Pearl Millet (Bajra)', rabi:'Mustard (Rapeseed)',  zaid:'Sunflower'              },
+    humid: { kharif:'Sugarcane',            rabi:'Wheat',               zaid:'Cucumber'               },
+    rainy: { kharif:'Maize (Corn)',         rabi:'Oats',                zaid:'Bottle Gourd (Lauki)'   },
+    cool:  { kharif:'Soybean',              rabi:'Potato',              zaid:'Muskmelon (Kharbooja)'  },
+  },
+  black: {
+    hot:   { kharif:'Soybean',              rabi:'Sunflower',           zaid:'Sesame (Til)'            },
+    dry:   { kharif:'Pearl Millet (Bajra)', rabi:'Sorghum (Jowar)',     zaid:'Sorghum (Jowar)'         },
+    humid: { kharif:'Soybean',              rabi:'Chickpea (Gram)',     zaid:"Okra (Lady's Finger)"    },
+    rainy: { kharif:'Cotton',               rabi:'Chickpea (Gram)',     zaid:'Bottle Gourd (Lauki)'    },
+    cool:  { kharif:'Maize (Corn)',          rabi:'Lentil (Masoor)',    zaid:'Sweet Sorghum (Jowar)'   },
+  },
+  silt: {
+    hot:   { kharif:'Sugarcane',            rabi:'Onion',               zaid:"Okra (Lady's Finger)"    },
+    dry:   { kharif:'Sorghum (Jowar)',      rabi:'Lentil (Masoor)',     zaid:'Sesame (Til)'             },
+    humid: { kharif:'Banana',               rabi:'Mustard',             zaid:'Bottle Gourd (Lauki)'    },
+    rainy: { kharif:'Jute',                 rabi:'Mustard (Rapeseed)',  zaid:'Pumpkin (Kaddu)'          },
+    cool:  { kharif:'Maize (Corn)',          rabi:'Wheat',              zaid:'Cucumber'                 },
+  },
 };
 
 const ALL_CROPS = [...new Set(
-  Object.values(CROP_MAP).flatMap(s => Object.values(s))
+  Object.values(SOIL_CROP_MAP).flatMap(w =>
+    Object.values(w).flatMap(s => Object.values(s))
+  )
 )];
 
 const CROP_EMOJI = {
-  'Rice / Jute':  '🌾', 'Rice': '🍚',  'Barley': '🌿',
-  'Cucumber':     '🥒', 'Mustard': '🌼', 'Brinjal': '🍆',
-  'Cotton':       '🌸', 'Wheat': '🌾', 'Tomato': '🍅',
-  'Pearl Millet': '🌾', 'Sunflower': '🌻', 'Maize': '🌽',
-  'Potato':       '🥔', 'Watermelon': '🍉',
+  'Pearl Millet (Bajra)':    '🌾',
+  'Chickpea (Gram)':         '🫘',
+  'Muskmelon (Kharbooja)':   '🍈',
+  'Wheat':                   '🌿',
+  'Sesame (Til)':            '🌿',
+  'Cowpea (Lobia)':          '🫘',
+  'Onion':                   '🧅',
+  'Bitter Gourd (Karela)':   '🥒',
+  'Groundnut (Peanut)':      '🥜',
+  'Mustard (Rapeseed)':      '🌼',
+  'Green Gram (Moong)':      '🫘',
+  'Maize (Corn)':            '🌽',
+  'Barley':                  '🌾',
+  'Watermelon':              '🍉',
+  'Rice (Heat-Tolerant)':    '🍚',
+  'Brinjal (Eggplant)':      '🍆',
+  'Sorghum (Jowar)':         '🌾',
+  'Rice (Paddy)':            '🍚',
+  'Taro (Arbi / Colocasia)': '🌿',
+  'Oats':                    '🌾',
+  'Pumpkin (Kaddu)':         '🎃',
+  'Cucumber':                '🥒',
+  'Cotton':                  '🌸',
+  'Tomato':                  '🍅',
+  'Sunflower':               '🌻',
+  'Sugarcane':               '🎋',
+  'Bottle Gourd (Lauki)':    '🥬',
+  'Soybean':                 '🫘',
+  'Potato':                  '🥔',
+  "Okra (Lady's Finger)":    '🌿',
+  'Lentil (Masoor)':         '🫘',
+  'Sweet Sorghum (Jowar)':   '🌾',
+  'Banana':                  '🍌',
+  'Mustard':                 '🌼',
+  'Jute':                    '🌿',
 };
 
 const SOIL_EMOJI    = { sandy:'🏜️', clay:'🟤', loamy:'🌿', black:'⚫', silt:'💧' };
@@ -54,10 +117,10 @@ function makeScenario() {
   const weathers = ['rainy', 'humid', 'hot', 'dry', 'cool'];
   const seasons  = ['kharif', 'rabi', 'zaid'];
 
+  const soil    = soils[Math.floor(Math.random() * soils.length)];
   const weather = weathers[Math.floor(Math.random() * weathers.length)];
   const season  = seasons[Math.floor(Math.random() * seasons.length)];
-  const soil    = soils[Math.floor(Math.random() * soils.length)];
-  const answer  = CROP_MAP[weather][season];
+  const answer  = SOIL_CROP_MAP[soil][weather][season];
 
   const pool        = ALL_CROPS.filter(c => c !== answer);
   const distractors = pool.sort(() => Math.random() - 0.5).slice(0, 3);
@@ -236,7 +299,6 @@ export default function Game() {
     setTimeout(() => {
       const nextRound = round + 1;
       if (nextRound >= totalRounds) {
-        /* Save high score */
         if (newScore > hiScore) {
           setHiScore(newScore);
           try { localStorage.setItem('agri_game_hi', String(newScore)); } catch { /* ignore */ }
@@ -266,7 +328,7 @@ export default function Game() {
 
   /* ── Derived ── */
   const accuracy = history.length ? Math.round((history.filter(h => h.correct).length / history.length) * 100) : 0;
-  const isNewHi     = score > 0 && score >= hiScore && phase === 'results';
+  const isNewHi  = score > 0 && score >= hiScore && phase === 'results';
 
   /* ══════════════════ T (theme tokens) ══════════════════ */
   const T = {
@@ -298,6 +360,7 @@ export default function Game() {
             Guess the right crop for the given soil, weather &amp; season conditions.<br />
             Race against the clock and build your streak!
           </p>
+          <p className="text-green-300/70 text-[11px] mt-2">75 expert rules · 5 soils · 5 weathers · 3 seasons</p>
           {hiScore > 0 && (
             <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20">
               <Trophy size={12} className="text-yellow-300" />
@@ -383,7 +446,6 @@ export default function Game() {
 
         {/* Top bar: progress + score + streak */}
         <div className="flex items-center gap-3">
-          {/* Progress bar */}
           <div className="flex-1">
             <div className="flex justify-between text-[10px] font-bold mb-1.5" style={{ color: T.accent }}>
               <span>Round {round + 1} of {totalRounds}</span>
@@ -395,7 +457,6 @@ export default function Game() {
             </div>
           </div>
 
-          {/* Streak */}
           {streak > 0 && (
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl font-bold text-[12px]"
               style={{ background: 'rgba(251,146,60,0.12)', border: '1px solid rgba(251,146,60,0.25)', color: '#fb923c' }}>
@@ -420,7 +481,7 @@ export default function Game() {
           {scenario && (
             <div className="flex flex-wrap gap-2">
               {[
-                { label:'Soil',    val: scenario.soil,    emoji: SOIL_EMOJI[scenario.soil]    },
+                { label:'Soil',    val: scenario.soil,    emoji: SOIL_EMOJI[scenario.soil]       },
                 { label:'Weather', val: scenario.weather, emoji: WEATHER_EMOJI[scenario.weather] },
                 { label:'Season',  val: scenario.season,  emoji: SEASON_EMOJI[scenario.season],  sub: SEASON_MONTHS[scenario.season] },
               ].map(c => (
@@ -471,9 +532,9 @@ export default function Game() {
         {/* Bottom stats */}
         <div className="flex justify-center gap-6 py-1">
           {[
-            { icon: Target,  label: 'Accuracy', val: history.length ? `${Math.round((history.filter(h=>h.correct).length/history.length)*100)}%` : '—' },
+            { icon: Target,  label: 'Accuracy',    val: history.length ? `${Math.round((history.filter(h=>h.correct).length/history.length)*100)}%` : '—' },
             { icon: Trophy,  label: 'Best Streak', val: bestStreak || '—' },
-            { icon: Timer,   label: 'Speed',     val: DIFFICULTY[difficulty].label },
+            { icon: Timer,   label: 'Speed',        val: DIFFICULTY[difficulty].label },
           ].map(s => (
             <div key={s.label} className="text-center">
               <s.icon size={12} style={{ color: T.accent, margin: '0 auto 2px' }} />
@@ -501,7 +562,6 @@ export default function Game() {
           style={{ background: 'linear-gradient(135deg,#0f2f0f 0%,#0e7490 100%)', border: '1px solid rgba(74,222,128,0.2)' }}>
           <div className="absolute inset-0 bg-crop-rows opacity-20 pointer-events-none" />
           <div className="relative z-10 p-6 text-center">
-            {/* Grade badge */}
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 font-display font-black text-4xl"
               style={{ background: gradeInfo.bg, border: `3px solid ${gradeInfo.color}`, color: gradeInfo.color, boxShadow: `0 0 30px ${gradeInfo.color}40` }}>
               {gradeInfo.label}
@@ -509,7 +569,6 @@ export default function Game() {
             <p className="text-white font-bold text-lg mb-0.5">{gradeInfo.msg}</p>
             <p className="text-green-200 text-[12px]">{DIFFICULTY[difficulty].label} · {totalRounds} rounds</p>
 
-            {/* Score */}
             <div className="mt-5 flex items-center justify-center gap-2">
               <p className="font-data font-black text-5xl tabular-nums" style={{ color: gradeInfo.color }}>{score}</p>
               <div className="text-left">
