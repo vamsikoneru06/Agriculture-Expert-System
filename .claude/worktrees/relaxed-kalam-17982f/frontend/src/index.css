@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Google Font ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ── Base resets ── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #f8fafc;
+  color: #1e293b;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ── Dark mode body ── */
+.dark body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+/* ── Utility layer ── */
+@layer components {
+  /* Card */
+  .card {
+    @apply bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-6;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 active:bg-primary-800
+           text-white font-semibold px-5 py-2.5 rounded-xl
+           transition-all duration-200 shadow-sm hover:shadow-md
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600
+           text-slate-700 dark:text-slate-200 font-semibold px-5 py-2.5 rounded-xl
+           transition-all duration-200;
+  }
+
+  /* Form input */
+  .form-input {
+    @apply w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600
+           bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           transition-all duration-200 placeholder-slate-400;
+  }
+
+  /* Form label */
+  .form-label {
+    @apply block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  /* Section heading */
+  .section-title {
+    @apply text-xl font-bold text-slate-800 dark:text-slate-100;
+  }
+
+  /* Sidebar link active */
+  .nav-link-active {
+    @apply bg-primary-600 text-white shadow-sm;
+  }
+
+  /* Sidebar link inactive */
+  .nav-link {
+    @apply text-slate-300 hover:bg-white/10 hover:text-white rounded-xl;
+  }
+}
+
+/* ── Gauge animation ── */
+@keyframes fillGauge {
+  from { stroke-dashoffset: 283; }
+  to   { stroke-dashoffset: var(--target-offset); }
+}
+
+.gauge-circle {
+  animation: fillGauge 1.5s ease-out forwards;
+}
+
+/* ── Fade in ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* ── Chart tooltip ── */
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+/* ── Chatbot bubble ── */
+.chat-bubble-user {
+  @apply bg-primary-600 text-white rounded-2xl rounded-br-sm px-4 py-2.5 max-w-xs text-sm;
+}
+.chat-bubble-bot {
+  @apply bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100
+         rounded-2xl rounded-bl-sm px-4 py-2.5 max-w-xs text-sm;
+}
